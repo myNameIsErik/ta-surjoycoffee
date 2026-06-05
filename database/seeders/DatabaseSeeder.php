@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Journal;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -33,7 +34,12 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AccountSeeder::class,
             CategorySeeder::class,
-            JournalDemoSeeder::class,
         ]);
+
+        // Demo jurnal hanya dijalankan kalau DB benar-benar kosong (first deploy / local fresh).
+        // Mencegah duplikat tiap container restart di production.
+        if (Journal::count() === 0) {
+            $this->call(JournalDemoSeeder::class);
+        }
     }
 }
