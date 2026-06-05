@@ -13,4 +13,11 @@ cmds = [
 ]
 
 [start]
-cmd = 'php artisan config:clear && php artisan migrate --force && php -S 0.0.0.0:$PORT -t public'
+cmd = '''
+echo "=== DB ENV CHECK ===" \
+&& echo "DB_CONNECTION=$DB_CONNECTION DB_HOST=$DB_HOST DB_DATABASE=$DB_DATABASE DB_USERNAME=$DB_USERNAME DATABASE_URL=${DATABASE_URL:0:30}..." \
+&& echo "===================" \
+&& php artisan config:clear \
+&& php artisan migrate --force \
+&& php -S 0.0.0.0:$PORT -t public
+'''
