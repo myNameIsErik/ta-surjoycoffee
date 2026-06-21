@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ConsigneeController;
+use App\Http\Controllers\ConsignmentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\StockMovementController;
@@ -45,6 +47,19 @@ Route::middleware('auth')->group(function () {
         Route::get('/card/{product}',         [StockMovementController::class, 'card'])->name('card');
         Route::get('/{stock}',                [StockMovementController::class, 'show'])->name('show');
         Route::delete('/{stock}',             [StockMovementController::class, 'destroy'])->name('destroy');
+    });
+
+    // Konsinyasi
+    Route::resource('consignees', ConsigneeController::class)->middleware('admin');
+
+    Route::prefix('consignments')->name('consignments.')->group(function () {
+        Route::get('/',                          [ConsignmentController::class, 'index'])->name('index');
+        Route::get('/create',                    [ConsignmentController::class, 'create'])->name('create');
+        Route::post('/',                         [ConsignmentController::class, 'store'])->name('store');
+        Route::get('/position',                  [ConsignmentController::class, 'position'])->name('position');
+        Route::get('/outstanding',               [ConsignmentController::class, 'outstanding'])->name('outstanding');
+        Route::get('/{consignment}',             [ConsignmentController::class, 'show'])->name('show');
+        Route::delete('/{consignment}',          [ConsignmentController::class, 'destroy'])->name('destroy');
     });
 
     // User management (admin only)

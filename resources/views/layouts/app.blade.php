@@ -56,11 +56,26 @@
                     </li>
 
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {{ request()->routeIs('stock.report') || request()->routeIs('stock.sales-report') || request()->routeIs('stock.purchase-report') ? 'active' : '' }}" data-bs-toggle="dropdown" href="#"><i class="bi bi-bar-chart me-1"></i>Laporan</a>
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('consignees.*') || request()->routeIs('consignments.*') ? 'active' : '' }}" data-bs-toggle="dropdown" href="#"><i class="bi bi-truck me-1"></i>Konsinyasi</a>
+                        <ul class="dropdown-menu">
+                            @if (auth()->user()->isAdmin())
+                                <li><a class="dropdown-item" href="{{ route('consignees.index') }}"><i class="bi bi-shop-window me-1"></i>Penerima Konsinyasi</a></li>
+                            @endif
+                            <li><a class="dropdown-item" href="{{ route('consignments.index') }}"><i class="bi bi-list-ul me-1"></i>Transaksi Konsinyasi</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ route('consignments.create', ['type' => 'send']) }}"><i class="bi bi-box-arrow-right me-1 text-success"></i>Kirim Titipan</a></li>
+                            <li><a class="dropdown-item" href="{{ route('consignments.create', ['type' => 'sold']) }}"><i class="bi bi-cash-coin me-1 text-primary"></i>Lapor Terjual</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('stock.report') || request()->routeIs('stock.sales-report') || request()->routeIs('stock.purchase-report') || request()->routeIs('consignments.position') ? 'active' : '' }}" data-bs-toggle="dropdown" href="#"><i class="bi bi-bar-chart me-1"></i>Laporan</a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="{{ route('stock.report') }}"><i class="bi bi-clipboard-data me-1"></i>Posisi Stok</a></li>
                             <li><a class="dropdown-item" href="{{ route('stock.sales-report') }}"><i class="bi bi-cart-check me-1 text-primary"></i>Laporan Penjualan</a></li>
                             <li><a class="dropdown-item" href="{{ route('stock.purchase-report') }}"><i class="bi bi-box-arrow-in-down me-1 text-success"></i>Laporan Pembelian</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ route('consignments.position') }}"><i class="bi bi-truck me-1"></i>Posisi Konsinyasi</a></li>
                         </ul>
                     </li>
                 @endauth
