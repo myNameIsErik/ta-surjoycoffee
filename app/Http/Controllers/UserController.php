@@ -38,7 +38,7 @@ class UserController extends Controller
     public function create()
     {
         return view('users.form', [
-            'user' => new User(['role' => 'kasir', 'is_active' => true]),
+            'user' => new User(['role' => 'staff_gudang', 'is_active' => true]),
             'roles' => User::ROLES,
         ]);
     }

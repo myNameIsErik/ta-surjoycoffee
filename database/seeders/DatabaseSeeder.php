@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Journal;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -12,9 +11,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         User::updateOrCreate(
-            ['email' => 'admin@cafe.test'],
+            ['email' => 'admin@starjaya.test'],
             [
-                'name' => 'Admin Cafe',
+                'name' => 'Admin STAR JAYA',
                 'password' => Hash::make('password'),
                 'role' => 'admin',
                 'is_active' => true,
@@ -22,24 +21,21 @@ class DatabaseSeeder extends Seeder
         );
 
         User::updateOrCreate(
-            ['email' => 'kasir@cafe.test'],
+            ['email' => 'gudang@starjaya.test'],
             [
-                'name' => 'Kasir Demo',
+                'name' => 'Staff Gudang Demo',
                 'password' => Hash::make('password'),
-                'role' => 'kasir',
+                'role' => 'staff_gudang',
                 'is_active' => true,
             ]
         );
+
+        // Bersihin user lama (kalau ada sisa dari project cafe lama)
+        User::whereIn('email', ['admin@cafe.test', 'kasir@cafe.test'])->delete();
 
         $this->call([
             AccountSeeder::class,
             CategorySeeder::class,
         ]);
-
-        // Demo jurnal hanya dijalankan kalau DB benar-benar kosong (first deploy / local fresh).
-        // Mencegah duplikat tiap container restart di production.
-        if (Journal::count() === 0) {
-            $this->call(JournalDemoSeeder::class);
-        }
     }
 }

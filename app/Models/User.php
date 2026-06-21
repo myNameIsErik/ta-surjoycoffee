@@ -18,7 +18,7 @@ class User extends Authenticatable
 
     public const ROLES = [
         'admin' => 'Administrator',
-        'kasir' => 'Kasir',
+        'staff_gudang' => 'Staff Gudang',
     ];
 
     protected function casts(): array

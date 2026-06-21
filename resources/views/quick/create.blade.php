@@ -53,8 +53,8 @@
                             @endforeach
                         </select>
                         <div class="form-text">
-                            @if ($isIncome) Contoh: Penjualan Makanan, Penjualan Minuman
-                            @else Contoh: Sewa, Gaji, Listrik, Bahan Baku
+                            @if ($isIncome) Contoh: Penjualan Barang Dagang, Pendapatan Lain
+                            @else Contoh: Sewa Gudang, Gaji, Listrik, Pengiriman, BBM
                             @endif
                         </div>
                     </div>
@@ -98,7 +98,7 @@
                 <h6 class="mb-2"><i class="bi bi-lightbulb me-1"></i>Contoh Penggunaan</h6>
                 @if ($isIncome)
                     <ul class="small mb-0 ps-3">
-                        <li>Penjualan tunai harian &rarr; Penjualan Makanan/Minuman ke Kas</li>
+                        <li>Penjualan tunai harian &rarr; Penjualan Barang Dagang ke Kas</li>
                         <li>Transfer pelanggan via bank &rarr; Penjualan ke Bank</li>
                         <li>Pendapatan tambahan &rarr; Pendapatan Lain ke Kas/Bank</li>
                     </ul>
@@ -107,7 +107,8 @@
                         <li>Bayar sewa tempat &rarr; Sewa Tempat dari Kas/Bank</li>
                         <li>Bayar gaji karyawan &rarr; Gaji Karyawan dari Bank</li>
                         <li>Bayar listrik/air &rarr; Listrik &amp; Air dari Kas/Bank</li>
-                        <li>Beli bahan baku &rarr; Bahan Baku dari Kas</li>
+                        <li>Beli barang dari supplier &rarr; Persediaan Barang Dagang dari Bank</li>
+                        <li>Bayar pengiriman/ekspedisi &rarr; Pengiriman & Ekspedisi dari Kas</li>
                     </ul>
                 @endif
             </div>

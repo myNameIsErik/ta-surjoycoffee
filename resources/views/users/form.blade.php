@@ -67,7 +67,7 @@
                 <div class="alert alert-info small mt-3 mb-3">
                     <strong><i class="bi bi-shield-check me-1"></i>Hak akses per role:</strong><br>
                     <strong>Administrator</strong> — akses penuh termasuk Manajemen User.<br>
-                    <strong>Kasir</strong> — akses ke transaksi (Jurnal, Stok) & laporan, tanpa Manajemen User.
+                    <strong>Staff Gudang</strong> — akses ke transaksi stok (pembelian/penjualan barang) & laporan stok, tanpa Manajemen User & akuntansi.
                 </div>
 
                 <button class="btn btn-brand"><i class="bi bi-save me-1"></i>Simpan</button>

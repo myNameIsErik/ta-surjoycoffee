@@ -14,13 +14,14 @@ class AccountSeeder extends Seeder
             ['1101', 'Kas',                            'aset',       'debit'],
             ['1102', 'Bank',                           'aset',       'debit'],
             ['1103', 'Piutang Usaha',                  'aset',       'debit'],
-            ['1201', 'Persediaan Bahan Baku',          'aset',       'debit'],
-            ['1202', 'Persediaan Minuman',             'aset',       'debit'],
-            ['1301', 'Peralatan Cafe',                 'aset',       'debit'],
+            ['1201', 'Persediaan Barang Dagang',       'aset',       'debit'],
+            ['1301', 'Peralatan Gudang',               'aset',       'debit'],
             ['1302', 'Akumulasi Penyusutan Peralatan', 'aset',       'kredit'],
+            ['1303', 'Kendaraan Operasional',          'aset',       'debit'],
+            ['1304', 'Akumulasi Penyusutan Kendaraan', 'aset',       'kredit'],
 
             // Kewajiban (2xxx)
-            ['2101', 'Utang Usaha',                    'kewajiban',  'kredit'],
+            ['2101', 'Utang Usaha (ke Supplier)',      'kewajiban',  'kredit'],
             ['2102', 'Utang Gaji',                     'kewajiban',  'kredit'],
             ['2201', 'Utang Bank',                     'kewajiban',  'kredit'],
 
@@ -30,21 +31,24 @@ class AccountSeeder extends Seeder
             ['3201', 'Laba Ditahan',                   'modal',      'kredit'],
 
             // Pendapatan (4xxx)
-            ['4101', 'Pendapatan Penjualan Makanan',   'pendapatan', 'kredit'],
-            ['4102', 'Pendapatan Penjualan Minuman',   'pendapatan', 'kredit'],
+            ['4101', 'Penjualan Barang Dagang',        'pendapatan', 'kredit'],
+            ['4102', 'Diskon Penjualan',               'pendapatan', 'debit'],
             ['4103', 'Pendapatan Lain-lain',           'pendapatan', 'kredit'],
 
             // Beban (5xxx)
-            ['5101', 'Beban Pembelian Bahan Baku',     'beban',      'debit'],
+            ['5101', 'Harga Pokok Penjualan',          'beban',      'debit'],
             ['5102', 'Beban Gaji Karyawan',            'beban',      'debit'],
-            ['5103', 'Beban Sewa Tempat',              'beban',      'debit'],
+            ['5103', 'Beban Sewa Gudang',              'beban',      'debit'],
             ['5104', 'Beban Listrik & Air',            'beban',      'debit'],
             ['5105', 'Beban Internet & Telepon',       'beban',      'debit'],
-            ['5106', 'Beban Pemasaran',                'beban',      'debit'],
-            ['5107', 'Beban Perlengkapan',             'beban',      'debit'],
-            ['5108', 'Beban Penyusutan Peralatan',     'beban',      'debit'],
-            ['5109', 'Beban Lain-lain',                'beban',      'debit'],
-            ['5110', 'Harga Pokok Penjualan',          'beban',      'debit'],
+            ['5106', 'Beban Pengiriman & Ekspedisi',   'beban',      'debit'],
+            ['5107', 'Beban Pemasaran',                'beban',      'debit'],
+            ['5108', 'Beban Perlengkapan Gudang',      'beban',      'debit'],
+            ['5109', 'Beban Penyusutan Peralatan',     'beban',      'debit'],
+            ['5110', 'Beban Penyusutan Kendaraan',     'beban',      'debit'],
+            ['5111', 'Beban BBM & Operasional Kendaraan', 'beban',   'debit'],
+            ['5112', 'Beban Administrasi Bank',        'beban',      'debit'],
+            ['5113', 'Beban Lain-lain',                'beban',      'debit'],
         ];
 
         foreach ($accounts as [$code, $name, $type, $normal]) {
@@ -58,5 +62,8 @@ class AccountSeeder extends Seeder
                 ]
             );
         }
+
+        // Hapus akun lama yang khusus cafe & sudah tidak relevan
+        Account::whereIn('code', ['1202'])->delete(); // 1202 Persediaan Minuman (old cafe)
     }
 }

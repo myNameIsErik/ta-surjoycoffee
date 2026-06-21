@@ -39,7 +39,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Satuan <span class="text-danger">*</span></label>
-                        <input type="text" name="unit" value="{{ old('unit', $product->unit) }}" class="form-control" placeholder="pcs, kg, liter, cup" required>
+                        <input type="text" name="unit" value="{{ old('unit', $product->unit) }}" class="form-control" placeholder="pcs, dus, karung, kg, liter" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Harga Beli (per satuan) <span class="text-danger">*</span></label>

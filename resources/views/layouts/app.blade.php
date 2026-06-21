@@ -31,7 +31,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-brand no-print">
     <div class="container-fluid">
         <a class="navbar-brand" href="{{ route('dashboard') }}">
-            <i class="bi bi-cup-hot-fill me-1"></i> {{ config('app.name') }}
+            <i class="bi bi-shop me-1"></i> {{ config('app.name') }}
         </a>
         <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#mainNav">
             <span class="navbar-toggler-icon"></span>
@@ -128,7 +128,7 @@
 </main>
 
 <footer class="text-center text-muted py-3 small no-print">
-    &copy; {{ date('Y') }} {{ config('app.name') }} &middot; Aplikasi laporan keuangan sederhana berbasis Laravel
+    &copy; {{ date('Y') }} {{ config('app.name') }} &middot; Aplikasi stockist distribusi
 </footer>
 
 <script src="/assets/js/bootstrap.bundle.min.js"></script>

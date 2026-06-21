@@ -20,7 +20,7 @@
                 <div class="mb-3">
                     <label class="form-label">Nama Kategori <span class="text-danger">*</span></label>
                     <input type="text" name="name" value="{{ old('name', $category->name) }}" class="form-control" required>
-                    <div class="form-text">Contoh: Minuman, Makanan, Snack, Bahan Baku.</div>
+                    <div class="form-text">Contoh: Sembako, Minuman Kemasan, Snack, Personal Care.</div>
                 </div>
 
                 <div class="mb-3">
