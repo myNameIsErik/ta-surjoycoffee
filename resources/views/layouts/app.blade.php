@@ -40,12 +40,6 @@
             <ul class="navbar-nav me-auto">
                 @auth
                     <li class="nav-item"><a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link {{ request()->routeIs('quick.*') ? 'active' : '' }}" href="{{ route('quick.create') }}"><i class="bi bi-lightning-charge-fill me-1"></i>Transaksi Cepat</a></li>
-
-                    @if (auth()->user()->isAdmin())
-                        <li class="nav-item"><a class="nav-link {{ request()->routeIs('accounts.*') ? 'active' : '' }}" href="{{ route('accounts.index') }}"><i class="bi bi-list-columns me-1"></i>Bagan Akun</a></li>
-                        <li class="nav-item"><a class="nav-link {{ request()->routeIs('journals.*') ? 'active' : '' }}" href="{{ route('journals.index') }}"><i class="bi bi-journal-text me-1"></i>Jurnal Umum</a></li>
-                    @endif
 
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {{ request()->routeIs('products.*') || request()->routeIs('stock.*') || request()->routeIs('categories.*') ? 'active' : '' }}" data-bs-toggle="dropdown" href="#"><i class="bi bi-box-seam me-1"></i>Persediaan</a>
@@ -58,22 +52,17 @@
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ route('stock.create', ['type' => 'purchase']) }}"><i class="bi bi-box-arrow-in-down me-1 text-success"></i>Stok Masuk (Beli)</a></li>
                             <li><a class="dropdown-item" href="{{ route('stock.create', ['type' => 'sale']) }}"><i class="bi bi-cart-check me-1 text-primary"></i>Penjualan</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ route('stock.report') }}"><i class="bi bi-clipboard-data me-1"></i>Laporan Stok</a></li>
                         </ul>
                     </li>
 
-                    @if (auth()->user()->isAdmin())
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {{ request()->routeIs('reports.*') ? 'active' : '' }}" data-bs-toggle="dropdown" href="#"><i class="bi bi-bar-chart me-1"></i>Laporan</a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{{ route('reports.ledger') }}">Buku Besar</a></li>
-                                <li><a class="dropdown-item" href="{{ route('reports.trial-balance') }}">Neraca Saldo</a></li>
-                                <li><a class="dropdown-item" href="{{ route('reports.income-statement') }}">Laba Rugi</a></li>
-                                <li><a class="dropdown-item" href="{{ route('reports.balance-sheet') }}">Neraca</a></li>
-                            </ul>
-                        </li>
-                    @endif
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('stock.report') || request()->routeIs('stock.sales-report') || request()->routeIs('stock.purchase-report') ? 'active' : '' }}" data-bs-toggle="dropdown" href="#"><i class="bi bi-bar-chart me-1"></i>Laporan</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ route('stock.report') }}"><i class="bi bi-clipboard-data me-1"></i>Posisi Stok</a></li>
+                            <li><a class="dropdown-item" href="{{ route('stock.sales-report') }}"><i class="bi bi-cart-check me-1 text-primary"></i>Laporan Penjualan</a></li>
+                            <li><a class="dropdown-item" href="{{ route('stock.purchase-report') }}"><i class="bi bi-box-arrow-in-down me-1 text-success"></i>Laporan Pembelian</a></li>
+                        </ul>
+                    </li>
                 @endauth
             </ul>
             <ul class="navbar-nav">

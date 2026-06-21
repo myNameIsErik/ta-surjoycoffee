@@ -3,7 +3,6 @@
 
 @section('content')
 @php
-    $needsPayment = in_array($type, ['purchase', 'sale']);
     $isSale = $type === 'sale';
     $icons = ['purchase'=>'box-arrow-in-down','sale'=>'cart-check','adjustment_in'=>'plus-circle','adjustment_out'=>'dash-circle'];
     $colors = ['purchase'=>'success','sale'=>'primary','adjustment_in'=>'info','adjustment_out'=>'warning'];
@@ -67,21 +66,9 @@
                     </div>
                     @endif
 
-                    @if ($needsPayment)
-                    <div class="col-md-8">
-                        <label class="form-label">Akun {{ $type === 'purchase' ? 'Pembayaran' : 'Penerimaan' }} <span class="text-danger">*</span></label>
-                        <select name="payment_account_id" class="form-select" required>
-                            <option value="">-- Pilih --</option>
-                            @foreach ($paymentAccounts as $a)
-                                <option value="{{ $a->id }}" @selected(old('payment_account_id') == $a->id)>{{ $a->code }} — {{ $a->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    @endif
-
                     <div class="col-12">
                         <label class="form-label">Catatan</label>
-                        <textarea name="note" rows="2" class="form-control">{{ old('note') }}</textarea>
+                        <textarea name="note" rows="2" class="form-control" placeholder="Opsional: nomor PO, nama supplier/customer, dll">{{ old('note') }}</textarea>
                     </div>
                 </div>
             </div>
@@ -101,9 +88,6 @@
                 <hr class="my-2">
                 <div class="d-flex justify-content-between"><span>Stok setelah transaksi:</span><span id="afterStock" class="fw-semibold">-</span></div>
 
-                <div class="alert alert-info small mt-3 mb-0">
-                    <i class="bi bi-info-circle me-1"></i>Jurnal akuntansi akan otomatis dibuat saat transaksi disimpan.
-                </div>
             </div>
         </div>
     </div>

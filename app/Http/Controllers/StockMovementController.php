@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Account;
-use App\Models\Journal;
 use App\Models\Product;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
@@ -49,7 +47,6 @@ class StockMovementController extends Controller
             'type' => $type,
             'types' => StockMovement::TYPES,
             'products' => Product::where('is_active', true)->orderBy('name')->get(),
-            'paymentAccounts' => Account::whereIn('code', ['1101', '1102'])->orderBy('code')->get(),
         ]);
     }
 
@@ -62,16 +59,10 @@ class StockMovementController extends Controller
             'quantity' => ['required', 'numeric', 'min:0.0001'],
             'unit_cost' => ['nullable', 'numeric', 'min:0'],
             'unit_price' => ['nullable', 'numeric', 'min:0'],
-            'payment_account_id' => ['nullable', 'exists:accounts,id'],
             'note' => ['nullable', 'string', 'max:500'],
         ]);
 
         $product = Product::findOrFail($data['product_id']);
-
-        $needsPayment = in_array($data['type'], ['purchase', 'sale']);
-        if ($needsPayment && empty($data['payment_account_id'])) {
-            throw ValidationException::withMessages(['payment_account_id' => 'Akun Kas/Bank wajib dipilih.']);
-        }
 
         if (in_array($data['type'], ['sale', 'adjustment_out']) && $data['quantity'] > $product->stock) {
             throw ValidationException::withMessages([
@@ -97,25 +88,19 @@ class StockMovementController extends Controller
                 'unit_price' => $unitPrice,
                 'total_cost' => $totalCost,
                 'total_price' => $totalPrice,
-                'payment_account_id' => $data['payment_account_id'] ?? null,
                 'user_id' => auth()->id(),
                 'note' => $data['note'] ?? null,
             ]);
 
             $this->updateStockAndCost($product, $movement);
-
-            $journal = $this->generateJournal($product, $movement);
-            if ($journal) {
-                $movement->update(['journal_id' => $journal->id]);
-            }
         });
 
-        return redirect()->route('stock.index')->with('success', 'Transaksi stok berhasil dicatat & jurnal otomatis dibuat.');
+        return redirect()->route('stock.index')->with('success', 'Transaksi stok berhasil dicatat.');
     }
 
     public function show(StockMovement $stock)
     {
-        $stock->load(['product', 'journal.entries.account', 'paymentAccount']);
+        $stock->load(['product']);
 
         return view('stock.show', ['movement' => $stock]);
     }
@@ -132,13 +117,10 @@ class StockMovementController extends Controller
                 $product->increment('stock', $qty);
             }
 
-            if ($stock->journal) {
-                $stock->journal->delete();
-            }
             $stock->delete();
         });
 
-        return back()->with('success', 'Transaksi stok berhasil dihapus & jurnal ikut dibatalkan.');
+        return back()->with('success', 'Transaksi stok berhasil dihapus & stok dikembalikan.');
     }
 
     public function card(Product $product, Request $request)
@@ -176,7 +158,7 @@ class StockMovementController extends Controller
 
     public function report(Request $request)
     {
-        $products = Product::with('inventoryAccount')->orderBy('code')->get()->map(function ($p) {
+        $products = Product::with('category')->orderBy('code')->get()->map(function ($p) {
             $p->stock_value = (float) $p->stock * (float) $p->cost_price;
             return $p;
         });
@@ -184,6 +166,69 @@ class StockMovementController extends Controller
         return view('stock.report', [
             'products' => $products,
             'totalValue' => $products->sum('stock_value'),
+        ]);
+    }
+
+    public function salesReport(Request $request)
+    {
+        $from = $request->string('from')->toString() ?: now()->startOfMonth()->toDateString();
+        $to = $request->string('to')->toString() ?: now()->endOfMonth()->toDateString();
+        $productId = $request->integer('product_id');
+
+        $query = StockMovement::with('product')
+            ->where('type', 'sale')
+            ->whereBetween('date', [$from, $to])
+            ->orderBy('date');
+
+        if ($productId) {
+            $query->where('product_id', $productId);
+        }
+
+        $movements = $query->get();
+
+        $totalQty = $movements->sum('quantity');
+        $totalRevenue = $movements->sum('total_price');
+        $totalCogs = $movements->sum('total_cost');
+        $grossProfit = $totalRevenue - $totalCogs;
+
+        return view('stock.sales-report', [
+            'movements' => $movements,
+            'products' => Product::orderBy('name')->get(),
+            'filters' => compact('from', 'to', 'productId'),
+            'from' => $from,
+            'to' => $to,
+            'totalQty' => $totalQty,
+            'totalRevenue' => $totalRevenue,
+            'totalCogs' => $totalCogs,
+            'grossProfit' => $grossProfit,
+        ]);
+    }
+
+    public function purchaseReport(Request $request)
+    {
+        $from = $request->string('from')->toString() ?: now()->startOfMonth()->toDateString();
+        $to = $request->string('to')->toString() ?: now()->endOfMonth()->toDateString();
+        $productId = $request->integer('product_id');
+
+        $query = StockMovement::with('product')
+            ->where('type', 'purchase')
+            ->whereBetween('date', [$from, $to])
+            ->orderBy('date');
+
+        if ($productId) {
+            $query->where('product_id', $productId);
+        }
+
+        $movements = $query->get();
+
+        return view('stock.purchase-report', [
+            'movements' => $movements,
+            'products' => Product::orderBy('name')->get(),
+            'filters' => compact('from', 'to', 'productId'),
+            'from' => $from,
+            'to' => $to,
+            'totalQty' => $movements->sum('quantity'),
+            'totalCost' => $movements->sum('total_cost'),
         ]);
     }
 
@@ -208,86 +253,4 @@ class StockMovementController extends Controller
         $product->save();
     }
 
-    protected function generateJournal(Product $product, StockMovement $movement): ?Journal
-    {
-        $lines = [];
-        $desc = '';
-
-        switch ($movement->type) {
-            case 'purchase':
-                $lines = [
-                    ['account_id' => $product->inventory_account_id, 'debit' => $movement->total_cost, 'credit' => 0],
-                    ['account_id' => $movement->payment_account_id,   'debit' => 0, 'credit' => $movement->total_cost],
-                ];
-                $desc = "Pembelian {$product->name} ({$this->formatQty($movement->quantity)} {$product->unit})";
-                break;
-
-            case 'sale':
-                $lines = [
-                    ['account_id' => $movement->payment_account_id,    'debit' => $movement->total_price, 'credit' => 0],
-                    ['account_id' => $product->revenue_account_id,     'debit' => 0, 'credit' => $movement->total_price],
-                    ['account_id' => $product->cogs_account_id,        'debit' => $movement->total_cost, 'credit' => 0],
-                    ['account_id' => $product->inventory_account_id,   'debit' => 0, 'credit' => $movement->total_cost],
-                ];
-                $desc = "Penjualan {$product->name} ({$this->formatQty($movement->quantity)} {$product->unit})";
-                break;
-
-            case 'adjustment_in':
-                $lines = [
-                    ['account_id' => $product->inventory_account_id, 'debit' => $movement->total_cost, 'credit' => 0],
-                    ['account_id' => $this->incomeOtherAccountId(),  'debit' => 0, 'credit' => $movement->total_cost],
-                ];
-                $desc = "Koreksi tambah stok {$product->name} ({$this->formatQty($movement->quantity)} {$product->unit})";
-                break;
-
-            case 'adjustment_out':
-                $lines = [
-                    ['account_id' => $this->expenseOtherAccountId(), 'debit' => $movement->total_cost, 'credit' => 0],
-                    ['account_id' => $product->inventory_account_id, 'debit' => 0, 'credit' => $movement->total_cost],
-                ];
-                $desc = "Koreksi kurang stok {$product->name} ({$this->formatQty($movement->quantity)} {$product->unit})";
-                break;
-        }
-
-        $lines = array_values(array_filter($lines, fn ($l) => $l['debit'] > 0 || $l['credit'] > 0));
-        if (count($lines) < 2) {
-            return null;
-        }
-
-        $journal = Journal::create([
-            'reference' => Journal::generateReference(),
-            'date' => $movement->date,
-            'description' => $desc . ' [' . $movement->reference . ']',
-            'total' => collect($lines)->sum('debit'),
-            'user_id' => auth()->id(),
-        ]);
-
-        foreach ($lines as $line) {
-            $journal->entries()->create([
-                'account_id' => $line['account_id'],
-                'debit' => $line['debit'],
-                'credit' => $line['credit'],
-                'memo' => $movement->reference,
-            ]);
-        }
-
-        return $journal;
-    }
-
-    protected function formatQty($value): string
-    {
-        return rtrim(rtrim(number_format((float) $value, 2, ',', '.'), '0'), ',');
-    }
-
-    protected function incomeOtherAccountId(): int
-    {
-        return Account::where('code', '4103')->value('id')
-            ?? Account::where('type', 'pendapatan')->orderBy('code')->value('id');
-    }
-
-    protected function expenseOtherAccountId(): int
-    {
-        return Account::where('code', '5109')->value('id')
-            ?? Account::where('type', 'beban')->orderBy('code')->value('id');
-    }
 }

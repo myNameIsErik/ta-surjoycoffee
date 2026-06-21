@@ -15,7 +15,7 @@
     @if ($product->exists) @method('PUT') @endif
 
     <div class="row g-3">
-        <div class="col-lg-7">
+        <div class="col-lg-8 mx-auto">
             <div class="card p-3">
                 <h6 class="mb-3">Informasi Barang</h6>
                 <div class="row g-3">
@@ -72,50 +72,6 @@
             </div>
         </div>
 
-        <div class="col-lg-5">
-            <div class="card p-3">
-                <h6 class="mb-3"><i class="bi bi-link-45deg me-1"></i>Mapping Akun Akuntansi</h6>
-                <p class="text-muted small">Setiap transaksi stok untuk barang ini akan otomatis menggunakan akun-akun berikut.</p>
-
-                <div class="mb-3">
-                    <label class="form-label">Akun Persediaan <span class="text-danger">*</span></label>
-                    <select name="inventory_account_id" class="form-select" required>
-                        <option value="">-- Pilih --</option>
-                        @foreach ($accounts['inventory'] as $a)
-                            <option value="{{ $a->id }}" @selected(old('inventory_account_id', $product->inventory_account_id) == $a->id)>{{ $a->code }} — {{ $a->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Akun Pendapatan <span class="text-danger">*</span></label>
-                    <select name="revenue_account_id" class="form-select" required>
-                        <option value="">-- Pilih --</option>
-                        @foreach ($accounts['revenue'] as $a)
-                            <option value="{{ $a->id }}" @selected(old('revenue_account_id', $product->revenue_account_id) == $a->id)>{{ $a->code }} — {{ $a->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Akun HPP (Harga Pokok Penjualan) <span class="text-danger">*</span></label>
-                    <select name="cogs_account_id" class="form-select" required>
-                        <option value="">-- Pilih --</option>
-                        @foreach ($accounts['cogs'] as $a)
-                            <option value="{{ $a->id }}" @selected(old('cogs_account_id', $product->cogs_account_id) == $a->id)>{{ $a->code }} — {{ $a->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="alert alert-info small mb-0">
-                    <strong>Contoh penjualan:</strong><br>
-                    Dr. Kas / Bank<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;Cr. Pendapatan<br>
-                    Dr. HPP<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;Cr. Persediaan
-                </div>
-            </div>
-        </div>
     </div>
 
     <div class="mt-3">

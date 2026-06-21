@@ -56,7 +56,6 @@
                 <th class="text-end">Qty</th>
                 <th class="text-end">Harga Satuan</th>
                 <th class="text-end">Total</th>
-                <th>Jurnal</th>
                 <th class="text-end">Aksi</th>
             </tr>
             </thead>
@@ -79,23 +78,16 @@
                     <td class="text-end fw-semibold">
                         @rupiah($m->type === 'sale' ? $m->total_price : $m->total_cost)
                     </td>
-                    <td>
-                        @if ($m->journal)
-                            <a href="{{ route('journals.show', $m->journal) }}" class="small"><code>{{ $m->journal->reference }}</code></a>
-                        @else
-                            <span class="text-muted small">-</span>
-                        @endif
-                    </td>
                     <td class="text-end">
                         <a href="{{ route('stock.show', $m) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
-                        <form action="{{ route('stock.destroy', $m) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus transaksi ini? Jurnal otomatis akan ikut dihapus & stok dikembalikan.')">
+                        <form action="{{ route('stock.destroy', $m) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus transaksi ini? Stok akan dikembalikan.')">
                             @csrf @method('DELETE')
                             <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                         </form>
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="9" class="text-center text-muted py-4">Belum ada transaksi stok.</td></tr>
+                <tr><td colspan="8" class="text-center text-muted py-4">Belum ada transaksi stok.</td></tr>
             @endforelse
             </tbody>
         </table>

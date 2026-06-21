@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Account;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -43,7 +42,6 @@ class ProductController extends Controller
     {
         return view('products.form', [
             'product' => new Product(['is_active' => true, 'unit' => 'pcs']),
-            'accounts' => $this->accountOptions(),
             'categories' => Category::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
@@ -65,7 +63,6 @@ class ProductController extends Controller
     {
         return view('products.form', [
             'product' => $product,
-            'accounts' => $this->accountOptions(),
             'categories' => Category::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
@@ -99,20 +96,8 @@ class ProductController extends Controller
             'sale_price' => ['required', 'numeric', 'min:0'],
             'stock' => ['required', 'numeric', 'min:0'],
             'min_stock' => ['nullable', 'numeric', 'min:0'],
-            'inventory_account_id' => ['required', 'exists:accounts,id'],
-            'revenue_account_id' => ['required', 'exists:accounts,id'],
-            'cogs_account_id' => ['required', 'exists:accounts,id'],
             'is_active' => ['nullable', 'boolean'],
         ]) + ['is_active' => $request->boolean('is_active')];
     }
 
-    protected function accountOptions(): array
-    {
-        $all = Account::orderBy('code')->get();
-        return [
-            'inventory' => $all->where('type', 'aset')->where('normal_balance', 'debit')->values(),
-            'revenue' => $all->where('type', 'pendapatan')->values(),
-            'cogs' => $all->where('type', 'beban')->values(),
-        ];
-    }
 }

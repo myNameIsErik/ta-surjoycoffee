@@ -2,60 +2,73 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Account;
-use App\Models\Journal;
-use App\Models\JournalEntry;
-use Illuminate\Http\Request;
+use App\Models\Product;
+use App\Models\StockMovement;
 use Illuminate\Support\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
         $startOfMonth = Carbon::now()->startOfMonth()->toDateString();
         $endOfMonth = Carbon::now()->endOfMonth()->toDateString();
 
-        $revenueMonth = (float) JournalEntry::whereHas('account', fn ($q) => $q->where('type', 'pendapatan'))
-            ->whereHas('journal', fn ($q) => $q->whereBetween('date', [$startOfMonth, $endOfMonth]))
-            ->selectRaw('COALESCE(SUM(credit) - SUM(debit),0) as total')
-            ->value('total');
+        // Total penjualan & pembelian bulan ini
+        $salesMonth = StockMovement::where('type', 'sale')
+            ->whereBetween('date', [$startOfMonth, $endOfMonth])
+            ->sum('total_price');
 
-        $expenseMonth = (float) JournalEntry::whereHas('account', fn ($q) => $q->where('type', 'beban'))
-            ->whereHas('journal', fn ($q) => $q->whereBetween('date', [$startOfMonth, $endOfMonth]))
-            ->selectRaw('COALESCE(SUM(debit) - SUM(credit),0) as total')
-            ->value('total');
+        $purchaseMonth = StockMovement::where('type', 'purchase')
+            ->whereBetween('date', [$startOfMonth, $endOfMonth])
+            ->sum('total_cost');
 
-        $profitMonth = $revenueMonth - $expenseMonth;
+        // Laba kotor bulan ini = revenue - HPP (cost)
+        $cogsMonth = StockMovement::where('type', 'sale')
+            ->whereBetween('date', [$startOfMonth, $endOfMonth])
+            ->sum('total_cost');
+        $grossProfitMonth = $salesMonth - $cogsMonth;
 
-        $cashAccounts = Account::whereIn('code', ['1101', '1102'])->get();
-        $cashBalance = $cashAccounts->sum(fn ($a) => $a->balance());
+        // Total nilai stok saat ini
+        $totalStockValue = Product::all()->sum(fn ($p) => (float) $p->stock * (float) $p->cost_price);
 
-        $recentJournals = Journal::with('entries.account')->latest('date')->latest('id')->limit(5)->get();
+        // Jumlah produk stok rendah
+        $lowStockCount = Product::whereColumn('stock', '<=', 'min_stock')
+            ->where('min_stock', '>', 0)
+            ->where('is_active', true)
+            ->count();
 
+        $recentMovements = StockMovement::with('product')
+            ->orderByDesc('date')
+            ->orderByDesc('id')
+            ->limit(8)
+            ->get();
+
+        // Tren 6 bulan terakhir
         $months = collect(range(5, 0))->map(function ($i) {
             $start = Carbon::now()->startOfMonth()->subMonths($i);
             $end = (clone $start)->endOfMonth();
+            $from = $start->toDateString();
+            $to = $end->toDateString();
 
-            $rev = (float) JournalEntry::whereHas('account', fn ($q) => $q->where('type', 'pendapatan'))
-                ->whereHas('journal', fn ($q) => $q->whereBetween('date', [$start->toDateString(), $end->toDateString()]))
-                ->selectRaw('COALESCE(SUM(credit) - SUM(debit),0) as total')->value('total');
-            $exp = (float) JournalEntry::whereHas('account', fn ($q) => $q->where('type', 'beban'))
-                ->whereHas('journal', fn ($q) => $q->whereBetween('date', [$start->toDateString(), $end->toDateString()]))
-                ->selectRaw('COALESCE(SUM(debit) - SUM(credit),0) as total')->value('total');
+            $sales = (float) StockMovement::where('type', 'sale')
+                ->whereBetween('date', [$from, $to])->sum('total_price');
+            $purchase = (float) StockMovement::where('type', 'purchase')
+                ->whereBetween('date', [$from, $to])->sum('total_cost');
 
             return [
                 'label' => $start->isoFormat('MMM YY'),
-                'revenue' => (float) $rev,
-                'expense' => (float) $exp,
+                'sales' => $sales,
+                'purchase' => $purchase,
             ];
         });
 
         return view('dashboard', compact(
-            'revenueMonth',
-            'expenseMonth',
-            'profitMonth',
-            'cashBalance',
-            'recentJournals',
+            'salesMonth',
+            'purchaseMonth',
+            'grossProfitMonth',
+            'totalStockValue',
+            'lowStockCount',
+            'recentMovements',
             'months'
         ));
     }

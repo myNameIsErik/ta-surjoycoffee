@@ -20,33 +20,9 @@
         <div class="col-md-3"><strong>Harga Pokok:</strong> @rupiah($movement->unit_cost)</div>
         <div class="col-md-3"><strong>Harga Jual:</strong> @rupiah($movement->unit_price)</div>
         <div class="col-md-3"><strong>Total:</strong> <span class="text-brand">@rupiah($movement->type === 'sale' ? $movement->total_price : $movement->total_cost)</span></div>
-        @if ($movement->paymentAccount)
-        <div class="col-md-6"><strong>Akun Bayar/Terima:</strong> {{ $movement->paymentAccount->code }} — {{ $movement->paymentAccount->name }}</div>
-        @endif
         @if ($movement->note)
         <div class="col-12"><strong>Catatan:</strong> {{ $movement->note }}</div>
         @endif
     </div>
-
-    @if ($movement->journal)
-    <hr>
-    <h6 class="mt-3 mb-3"><i class="bi bi-journal-text me-1"></i> Jurnal Otomatis: <a href="{{ route('journals.show', $movement->journal) }}"><code>{{ $movement->journal->reference }}</code></a></h6>
-    <table class="table align-middle">
-        <thead><tr><th>Akun</th><th>Memo</th><th class="text-end">Debit</th><th class="text-end">Kredit</th></tr></thead>
-        <tbody>
-        @foreach ($movement->journal->entries as $e)
-            <tr>
-                <td>{{ $e->account->code }} — {{ $e->account->name }}</td>
-                <td class="text-muted small">{{ $e->memo }}</td>
-                <td class="text-end">@if($e->debit > 0)@rupiah($e->debit)@endif</td>
-                <td class="text-end">@if($e->credit > 0)@rupiah($e->credit)@endif</td>
-            </tr>
-        @endforeach
-        </tbody>
-        <tfoot>
-            <tr class="report-table"><th colspan="2" class="text-end">Total</th><th class="text-end">@rupiah($movement->journal->entries->sum('debit'))</th><th class="text-end">@rupiah($movement->journal->entries->sum('credit'))</th></tr>
-        </tfoot>
-    </table>
-    @endif
 </div>
 @endsection
