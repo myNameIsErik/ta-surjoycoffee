@@ -13,12 +13,6 @@ class StockMovement extends Model
         'type',
         'product_id',
         'quantity',
-        'unit_cost',
-        'unit_price',
-        'total_cost',
-        'total_price',
-        'payment_account_id',
-        'journal_id',
         'user_id',
         'note',
     ];
@@ -26,10 +20,6 @@ class StockMovement extends Model
     protected $casts = [
         'date' => 'date',
         'quantity' => 'decimal:2',
-        'unit_cost' => 'decimal:2',
-        'unit_price' => 'decimal:2',
-        'total_cost' => 'decimal:2',
-        'total_price' => 'decimal:2',
     ];
 
     public const TYPES = [
@@ -42,16 +32,6 @@ class StockMovement extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function paymentAccount(): BelongsTo
-    {
-        return $this->belongsTo(Account::class, 'payment_account_id');
-    }
-
-    public function journal(): BelongsTo
-    {
-        return $this->belongsTo(Journal::class);
     }
 
     public function user(): BelongsTo

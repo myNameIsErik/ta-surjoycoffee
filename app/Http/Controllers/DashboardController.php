@@ -13,25 +13,15 @@ class DashboardController extends Controller
         $startOfMonth = Carbon::now()->startOfMonth()->toDateString();
         $endOfMonth = Carbon::now()->endOfMonth()->toDateString();
 
-        // Total penjualan & pembelian bulan ini
-        $salesMonth = StockMovement::where('type', 'sale')
+        $salesQtyMonth = (float) StockMovement::where('type', 'sale')
             ->whereBetween('date', [$startOfMonth, $endOfMonth])
-            ->sum('total_price');
+            ->sum('quantity');
 
-        $purchaseMonth = StockMovement::where('type', 'purchase')
+        $purchaseQtyMonth = (float) StockMovement::where('type', 'purchase')
             ->whereBetween('date', [$startOfMonth, $endOfMonth])
-            ->sum('total_cost');
+            ->sum('quantity');
 
-        // Laba kotor bulan ini = revenue - HPP (cost)
-        $cogsMonth = StockMovement::where('type', 'sale')
-            ->whereBetween('date', [$startOfMonth, $endOfMonth])
-            ->sum('total_cost');
-        $grossProfitMonth = $salesMonth - $cogsMonth;
-
-        // Total nilai stok saat ini
-        $totalStockValue = Product::all()->sum(fn ($p) => (float) $p->stock * (float) $p->cost_price);
-
-        // Jumlah produk stok rendah
+        $totalProducts = Product::where('is_active', true)->count();
         $lowStockCount = Product::whereColumn('stock', '<=', 'min_stock')
             ->where('min_stock', '>', 0)
             ->where('is_active', true)
@@ -43,7 +33,6 @@ class DashboardController extends Controller
             ->limit(8)
             ->get();
 
-        // Tren 6 bulan terakhir
         $months = collect(range(5, 0))->map(function ($i) {
             $start = Carbon::now()->startOfMonth()->subMonths($i);
             $end = (clone $start)->endOfMonth();
@@ -51,9 +40,9 @@ class DashboardController extends Controller
             $to = $end->toDateString();
 
             $sales = (float) StockMovement::where('type', 'sale')
-                ->whereBetween('date', [$from, $to])->sum('total_price');
+                ->whereBetween('date', [$from, $to])->sum('quantity');
             $purchase = (float) StockMovement::where('type', 'purchase')
-                ->whereBetween('date', [$from, $to])->sum('total_cost');
+                ->whereBetween('date', [$from, $to])->sum('quantity');
 
             return [
                 'label' => $start->isoFormat('MMM YY'),
@@ -63,10 +52,9 @@ class DashboardController extends Controller
         });
 
         return view('dashboard', compact(
-            'salesMonth',
-            'purchaseMonth',
-            'grossProfitMonth',
-            'totalStockValue',
+            'salesQtyMonth',
+            'purchaseQtyMonth',
+            'totalProducts',
             'lowStockCount',
             'recentMovements',
             'months'

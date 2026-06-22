@@ -16,12 +16,8 @@
         <div class="col-md-3"><strong>Tanggal:</strong> {{ $movement->date->isoFormat('DD MMMM YYYY') }}</div>
         <div class="col-md-3"><strong>Tipe:</strong> <span class="badge {{ $movement->type === 'send' ? 'bg-success' : 'bg-primary' }}">{{ $movement->typeLabel() }}</span></div>
         <div class="col-md-3"><strong>Penerima:</strong> {{ $movement->consignee->name }}</div>
-        <div class="col-md-3"><strong>Barang:</strong> {{ $movement->product->code }} — {{ $movement->product->name }}</div>
-        <div class="col-md-3"><strong>Qty:</strong> @qty($movement->quantity) {{ $movement->product->unit }}</div>
-        <div class="col-md-3"><strong>Harga Pokok:</strong> @rupiah($movement->unit_cost)</div>
-        <div class="col-md-3"><strong>Harga Jual:</strong> @rupiah($movement->unit_price)</div>
-        <div class="col-md-3"><strong>Total Modal:</strong> @rupiah($movement->total_cost)</div>
-        <div class="col-md-3"><strong>Total Penjualan:</strong> <span class="text-brand">@rupiah($movement->total_price)</span></div>
+        <div class="col-md-6"><strong>Barang:</strong> {{ $movement->product->code }} — {{ $movement->product->name }}</div>
+        <div class="col-md-6"><strong>Qty:</strong> <span class="text-brand fw-semibold">@qty($movement->quantity) {{ $movement->product->unit }}</span></div>
         @if ($movement->note)
         <div class="col-12"><strong>Catatan:</strong> {{ $movement->note }}</div>
         @endif

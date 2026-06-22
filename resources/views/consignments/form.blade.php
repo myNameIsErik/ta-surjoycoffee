@@ -45,7 +45,6 @@
                             <option value="">-- Pilih Barang --</option>
                             @foreach ($products as $p)
                                 <option value="{{ $p->id }}"
-                                    data-price="{{ $p->sale_price }}"
                                     data-stock="{{ $p->stock }}"
                                     data-unit="{{ $p->unit }}"
                                     @selected(old('product_id') == $p->id)>
@@ -65,13 +64,6 @@
                         @if (!$isSend)<div class="form-text" id="outstandingHint">Sisa di penerima ini: -</div>@endif
                     </div>
 
-                    @if (!$isSend)
-                    <div class="col-md-4">
-                        <label class="form-label">Harga Jual / satuan</label>
-                        <input type="number" step="1" min="0" name="unit_price" id="unit_price" value="{{ old('unit_price') }}" class="form-control" placeholder="Default dari master">
-                    </div>
-                    @endif
-
                     <div class="col-12">
                         <label class="form-label">Catatan</label>
                         <textarea name="note" rows="2" class="form-control" placeholder="Opsional: catatan / PIC">{{ old('note') }}</textarea>
@@ -87,16 +79,16 @@
                     <div class="d-flex justify-content-between mb-2"><span>Stok gudang saat ini:</span><span id="currentStock" class="fw-semibold">-</span></div>
                 @endif
                 <div class="d-flex justify-content-between mb-2"><span>Qty:</span><span id="qtyPreview">-</span></div>
-                <div class="d-flex justify-content-between mb-2"><span>Nilai {{ $isSend ? 'Modal' : 'Penjualan' }}:</span><span id="totalPreview" class="text-brand fw-semibold">Rp 0</span></div>
                 @if ($isSend)
+                    <hr class="my-2">
                     <div class="d-flex justify-content-between"><span>Stok gudang setelah:</span><span id="afterStock" class="fw-semibold">-</span></div>
                 @endif
 
                 <div class="alert alert-info small mt-3 mb-0">
                     @if ($isSend)
-                        <i class="bi bi-info-circle me-1"></i>Stok fisik akan berkurang dari gudang & masuk ke titipan penerima. Belum jadi penjualan sampai dilaporkan terjual.
+                        <i class="bi bi-info-circle me-1"></i>Stok fisik akan berkurang dari gudang & masuk ke titipan penerima.
                     @else
-                        <i class="bi bi-info-circle me-1"></i>Pastikan penerima sudah melaporkan barang yang terjual. Stok gudang tidak berubah (sudah berkurang saat dikirim).
+                        <i class="bi bi-info-circle me-1"></i>Stok gudang tidak berubah (sudah berkurang saat dikirim). Cuma kurangi sisa titipan di penerima.
                     @endif
                 </div>
             </div>
@@ -113,13 +105,11 @@
 <script>
 (function() {
     const isSend = {{ $isSend ? 'true' : 'false' }};
-    const fmt = v => 'Rp ' + (Number(v) || 0).toLocaleString('id-ID', { maximumFractionDigits: 0 });
     const numFmt = v => (Number(v) || 0).toLocaleString('id-ID', { maximumFractionDigits: 0 });
 
     const productSel = document.getElementById('product_id');
     const consigneeSel = document.getElementById('consignee_id');
     const qtyEl = document.getElementById('quantity');
-    const priceEl = document.getElementById('unit_price');
     const unitLabel = document.getElementById('unitLabel');
 
     async function fetchOutstanding(consigneeId, productId) {
@@ -134,15 +124,11 @@
 
     async function recalc() {
         const opt = productSel.options[productSel.selectedIndex];
-        const price = opt?.dataset?.price ? parseFloat(opt.dataset.price) : 0;
         const stock = opt?.dataset?.stock ? parseFloat(opt.dataset.stock) : 0;
         const unit = opt?.dataset?.unit || '';
         unitLabel.textContent = unit || '-';
 
-        if (!isSend && priceEl && !priceEl.value) priceEl.value = price;
-
         const qty = parseFloat(qtyEl.value) || 0;
-        const used = !isSend ? (parseFloat(priceEl?.value) || price) : (opt?.dataset?.cost || 0);
 
         if (isSend) {
             document.getElementById('currentStock').textContent = productSel.value ? `${numFmt(stock)} ${unit}` : '-';
@@ -161,14 +147,11 @@
             }
         }
         document.getElementById('qtyPreview').textContent = qty ? `${numFmt(qty)} ${unit}` : '-';
-
-        const total = isSend ? qty * (parseFloat(opt?.dataset?.cost) || 0) : qty * (parseFloat(priceEl?.value) || price);
-        document.getElementById('totalPreview').textContent = fmt(total);
     }
 
-    productSel.addEventListener('change', () => { if (priceEl) priceEl.value = ''; recalc(); });
+    productSel.addEventListener('change', recalc);
     consigneeSel.addEventListener('change', recalc);
-    [qtyEl, priceEl].forEach(el => el && el.addEventListener('input', recalc));
+    qtyEl.addEventListener('input', recalc);
     recalc();
 })();
 </script>

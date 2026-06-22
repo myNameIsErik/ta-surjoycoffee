@@ -42,14 +42,6 @@
                         <input type="text" name="unit" value="{{ old('unit', $product->unit) }}" class="form-control" placeholder="pcs, dus, karung, kg, liter" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Harga Beli (per satuan) <span class="text-danger">*</span></label>
-                        <input type="number" step="0.01" min="0" name="cost_price" value="{{ old('cost_price', $product->cost_price) }}" class="form-control" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Harga Jual (per satuan) <span class="text-danger">*</span></label>
-                        <input type="number" step="0.01" min="0" name="sale_price" value="{{ old('sale_price', $product->sale_price) }}" class="form-control" required>
-                    </div>
-                    <div class="col-md-6">
                         <label class="form-label">Stok {{ $product->exists ? 'Saat Ini' : 'Awal' }}</label>
                         <input type="number" step="1" min="0" name="stock" value="{{ old('stock', (int) $product->stock) }}" class="form-control" {{ $product->exists ? 'readonly' : '' }}>
                         @if ($product->exists)

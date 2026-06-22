@@ -14,10 +14,6 @@ class Consignment extends Model
         'consignee_id',
         'product_id',
         'quantity',
-        'unit_cost',
-        'unit_price',
-        'total_cost',
-        'total_price',
         'user_id',
         'note',
     ];
@@ -25,10 +21,6 @@ class Consignment extends Model
     protected $casts = [
         'date' => 'date',
         'quantity' => 'decimal:2',
-        'unit_cost' => 'decimal:2',
-        'unit_price' => 'decimal:2',
-        'total_cost' => 'decimal:2',
-        'total_price' => 'decimal:2',
     ];
 
     public const TYPES = [

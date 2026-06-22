@@ -54,8 +54,7 @@
                 <th>Tipe</th>
                 <th>Barang</th>
                 <th class="text-end">Qty</th>
-                <th class="text-end">Harga Satuan</th>
-                <th class="text-end">Total</th>
+                <th>Catatan</th>
                 <th class="text-end">Aksi</th>
             </tr>
             </thead>
@@ -71,13 +70,8 @@
                         <span class="badge {{ $badges[$m->type] ?? 'bg-secondary' }}">{{ $m->typeLabel() }}</span>
                     </td>
                     <td>{{ $m->product->code }} — {{ $m->product->name }}</td>
-                    <td class="text-end">@qty($m->quantity) {{ $m->product->unit }}</td>
-                    <td class="text-end">
-                        @rupiah($m->type === 'sale' ? $m->unit_price : $m->unit_cost)
-                    </td>
-                    <td class="text-end fw-semibold">
-                        @rupiah($m->type === 'sale' ? $m->total_price : $m->total_cost)
-                    </td>
+                    <td class="text-end fw-semibold">@qty($m->quantity) {{ $m->product->unit }}</td>
+                    <td class="text-muted small">{{ \Illuminate\Support\Str::limit($m->note, 40) }}</td>
                     <td class="text-end">
                         <a href="{{ route('stock.show', $m) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
                         <form action="{{ route('stock.destroy', $m) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus transaksi ini? Stok akan dikembalikan.')">

@@ -17,14 +17,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrapFive();
 
-        Blade::directive('rupiah', function ($expression) {
-            return "<?php echo 'Rp ' . number_format((float)($expression), 0, ',', '.'); ?>";
-        });
-
-        Blade::directive('rupiah2', function ($expression) {
-            return "<?php echo 'Rp ' . number_format((float)($expression), 2, ',', '.'); ?>";
-        });
-
         Blade::directive('qty', function ($expression) {
             return "<?php \$__v = (float)($expression); echo rtrim(rtrim(number_format(\$__v, 2, ',', '.'), '0'), ','); ?>";
         });

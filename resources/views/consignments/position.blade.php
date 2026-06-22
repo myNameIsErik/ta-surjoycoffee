@@ -26,8 +26,8 @@
 </form>
 
 <div class="row g-3 mb-3">
-    <div class="col-md-6"><div class="card p-3"><div class="text-muted small">Total Nilai Modal Titipan</div><div class="h5 mb-0">@rupiah($grandTotalCost)</div></div></div>
-    <div class="col-md-6"><div class="card p-3"><div class="text-muted small">Estimasi Nilai Penjualan</div><div class="h5 mb-0 text-success">@rupiah($grandTotalPrice)</div></div></div>
+    <div class="col-md-6"><div class="card p-3"><div class="text-muted small">Penerima dengan Titipan</div><div class="h5 mb-0">{{ $totalConsignees }}</div></div></div>
+    <div class="col-md-6"><div class="card p-3"><div class="text-muted small">Total Baris Barang Titipan</div><div class="h5 mb-0">{{ $totalLines }}</div></div></div>
 </div>
 
 <div class="card p-4">
@@ -48,11 +48,8 @@
                 <tr>
                     <th>Kode</th>
                     <th>Nama Barang</th>
+                    <th>Satuan</th>
                     <th class="text-end">Qty Titipan</th>
-                    <th class="text-end">Harga Beli</th>
-                    <th class="text-end">Harga Jual</th>
-                    <th class="text-end">Nilai Modal</th>
-                    <th class="text-end">Nilai Penjualan</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -60,19 +57,15 @@
                     <tr>
                         <td>{{ $row['product']->code }}</td>
                         <td>{{ $row['product']->name }}</td>
+                        <td class="text-muted">{{ $row['product']->unit }}</td>
                         <td class="text-end fw-semibold">@qty($row['outstanding']) {{ $row['product']->unit }}</td>
-                        <td class="text-end text-muted">@rupiah($row['product']->cost_price)</td>
-                        <td class="text-end">@rupiah($row['product']->sale_price)</td>
-                        <td class="text-end">@rupiah($row['outstanding'] * (float) $row['product']->cost_price)</td>
-                        <td class="text-end text-success">@rupiah($row['outstanding'] * (float) $row['product']->sale_price)</td>
                     </tr>
                 @endforeach
                 </tbody>
                 <tfoot>
                 <tr>
-                    <th colspan="5" class="text-end">Subtotal {{ $c->name }}</th>
-                    <th class="text-end">@rupiah($c->outstanding_total_cost)</th>
-                    <th class="text-end text-success">@rupiah($c->outstanding_total_price)</th>
+                    <th colspan="3" class="text-end">Total Baris di {{ $c->name }}</th>
+                    <th class="text-end">{{ $c->outstanding_rows->count() }} barang</th>
                 </tr>
                 </tfoot>
             </table>
@@ -80,17 +73,5 @@
     @empty
         <div class="text-center text-muted py-4">Tidak ada barang titipan yang masih outstanding.</div>
     @endforelse
-
-    @if ($consignees->count() > 0)
-        <div class="border-top pt-3 mt-2">
-            <div class="d-flex justify-content-between">
-                <strong>GRAND TOTAL</strong>
-                <div>
-                    Modal: <strong>@rupiah($grandTotalCost)</strong> &nbsp;|&nbsp;
-                    Estimasi Penjualan: <strong class="text-success">@rupiah($grandTotalPrice)</strong>
-                </div>
-            </div>
-        </div>
-    @endif
 </div>
 @endsection

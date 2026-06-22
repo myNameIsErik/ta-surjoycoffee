@@ -65,7 +65,6 @@ class ConsignmentController extends Controller
             'consignee_id' => ['required', 'exists:consignees,id'],
             'product_id' => ['required', 'exists:products,id'],
             'quantity' => ['required', 'numeric', 'min:0.0001'],
-            'unit_price' => ['nullable', 'numeric', 'min:0'],
             'note' => ['nullable', 'string', 'max:500'],
         ]);
 
@@ -73,14 +72,12 @@ class ConsignmentController extends Controller
         $qty = (float) $data['quantity'];
 
         if ($data['type'] === 'send') {
-            // Validasi stok gudang cukup
             if ($qty > (float) $product->stock) {
                 throw ValidationException::withMessages([
                     'quantity' => "Stok gudang tidak cukup. Saat ini: {$product->stock} {$product->unit}.",
                 ]);
             }
         } else { // sold
-            // Validasi outstanding qty di consignee cukup
             $outstanding = Consignment::outstanding($data['consignee_id'], $data['product_id']);
             if ($qty > $outstanding) {
                 throw ValidationException::withMessages([
@@ -89,13 +86,7 @@ class ConsignmentController extends Controller
             }
         }
 
-        $unitCost = (float) $product->cost_price;
-        $unitPrice = (float) ($data['unit_price'] ?? $product->sale_price);
-
-        DB::transaction(function () use ($data, $product, $qty, $unitCost, $unitPrice) {
-            $totalCost = $unitCost * $qty;
-            $totalPrice = $unitPrice * $qty;
-
+        DB::transaction(function () use ($data, $product, $qty) {
             Consignment::create([
                 'reference' => Consignment::generateReference($data['type']),
                 'date' => $data['date'],
@@ -103,10 +94,6 @@ class ConsignmentController extends Controller
                 'consignee_id' => $data['consignee_id'],
                 'product_id' => $product->id,
                 'quantity' => $qty,
-                'unit_cost' => $unitCost,
-                'unit_price' => $unitPrice,
-                'total_cost' => $totalCost,
-                'total_price' => $totalPrice,
                 'user_id' => auth()->id(),
                 'note' => $data['note'] ?? null,
             ]);
@@ -168,20 +155,19 @@ class ConsignmentController extends Controller
         $consignees = $query->get()->map(function ($c) {
             $rows = $c->outstandingByProduct();
             $c->outstanding_rows = $rows;
-            $c->outstanding_total_cost = $rows->sum(fn ($r) => $r['outstanding'] * (float) $r['product']->cost_price);
-            $c->outstanding_total_price = $rows->sum(fn ($r) => $r['outstanding'] * (float) $r['product']->sale_price);
+            $c->outstanding_total_qty = $rows->sum(fn ($r) => $r['outstanding']);
             return $c;
         })->filter(fn ($c) => $c->outstanding_rows->count() > 0)->values();
 
-        $grandTotalCost = $consignees->sum('outstanding_total_cost');
-        $grandTotalPrice = $consignees->sum('outstanding_total_price');
+        $totalConsignees = $consignees->count();
+        $totalLines = $consignees->sum(fn ($c) => $c->outstanding_rows->count());
 
         return view('consignments.position', [
             'consignees' => $consignees,
             'allConsignees' => Consignee::orderBy('name')->get(),
             'filters' => ['consignee_id' => $consigneeId],
-            'grandTotalCost' => $grandTotalCost,
-            'grandTotalPrice' => $grandTotalPrice,
+            'totalConsignees' => $totalConsignees,
+            'totalLines' => $totalLines,
         ]);
     }
 }

@@ -3,9 +3,9 @@
 
 @section('content')
 @php
-    $isSale = $type === 'sale';
     $icons = ['purchase'=>'box-arrow-in-down','sale'=>'cart-check','adjustment_in'=>'plus-circle','adjustment_out'=>'dash-circle'];
     $colors = ['purchase'=>'success','sale'=>'primary','adjustment_in'=>'info','adjustment_out'=>'warning'];
+    $isOut = in_array($type, ['sale','adjustment_out']);
 @endphp
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -31,8 +31,6 @@
                             <option value="">-- Pilih Barang --</option>
                             @foreach ($products as $p)
                                 <option value="{{ $p->id }}"
-                                    data-cost="{{ $p->cost_price }}"
-                                    data-price="{{ $p->sale_price }}"
                                     data-stock="{{ $p->stock }}"
                                     data-unit="{{ $p->unit }}"
                                     @selected(old('product_id') == $p->id)>
@@ -50,22 +48,6 @@
                         </div>
                     </div>
 
-                    @if ($isSale)
-                    <div class="col-md-4">
-                        <label class="form-label">Harga Jual / satuan</label>
-                        <input type="number" step="0.01" min="0" name="unit_price" id="unit_price" value="{{ old('unit_price') }}" class="form-control" placeholder="Default dari master">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Harga Pokok / satuan</label>
-                        <input type="number" step="0.01" min="0" name="unit_cost" id="unit_cost" value="{{ old('unit_cost') }}" class="form-control" readonly>
-                    </div>
-                    @else
-                    <div class="col-md-4">
-                        <label class="form-label">Harga / satuan @if($type==='purchase')<span class="text-danger">*</span>@endif</label>
-                        <input type="number" step="0.01" min="0" name="unit_cost" id="unit_cost" value="{{ old('unit_cost') }}" class="form-control" {{ $type==='purchase' ? 'required' : '' }}>
-                    </div>
-                    @endif
-
                     <div class="col-12">
                         <label class="form-label">Catatan</label>
                         <textarea name="note" rows="2" class="form-control" placeholder="Opsional: nomor PO, nama supplier/customer, dll">{{ old('note') }}</textarea>
@@ -79,15 +61,8 @@
                 <h6 class="mb-3">Ringkasan</h6>
                 <div class="d-flex justify-content-between mb-2"><span>Stok saat ini:</span><span id="currentStock" class="fw-semibold">-</span></div>
                 <div class="d-flex justify-content-between mb-2"><span>Qty:</span><span id="qtyPreview">-</span></div>
-                <div class="d-flex justify-content-between mb-2"><span>Total {{ $isSale ? 'Penjualan' : 'Nilai' }}:</span><span id="totalPreview" class="text-brand fw-semibold">Rp 0</span></div>
-                @if ($isSale)
-                <div class="d-flex justify-content-between mb-2"><span>Total HPP:</span><span id="cogsPreview" class="text-muted">Rp 0</span></div>
-                <hr class="my-2">
-                <div class="d-flex justify-content-between"><span>Estimasi Laba Kotor:</span><span id="profitPreview" class="text-success fw-semibold">Rp 0</span></div>
-                @endif
                 <hr class="my-2">
                 <div class="d-flex justify-content-between"><span>Stok setelah transaksi:</span><span id="afterStock" class="fw-semibold">-</span></div>
-
             </div>
         </div>
     </div>
@@ -101,51 +76,32 @@
 @push('scripts')
 <script>
 (function() {
-    const isSale = {{ $isSale ? 'true' : 'false' }};
-    const isOut = {{ in_array($type, ['sale','adjustment_out']) ? 'true' : 'false' }};
-    const fmt = v => 'Rp ' + (Number(v) || 0).toLocaleString('id-ID', { maximumFractionDigits: 0 });
+    const isOut = {{ $isOut ? 'true' : 'false' }};
     const numFmt = v => (Number(v) || 0).toLocaleString('id-ID', { maximumFractionDigits: 0 });
 
     const productSel = document.getElementById('product_id');
     const qtyEl = document.getElementById('quantity');
-    const costEl = document.getElementById('unit_cost');
-    const priceEl = document.getElementById('unit_price');
     const unitLabel = document.getElementById('unitLabel');
 
     function recalc() {
         const opt = productSel.options[productSel.selectedIndex];
-        const cost = opt?.dataset?.cost ? parseFloat(opt.dataset.cost) : 0;
-        const price = opt?.dataset?.price ? parseFloat(opt.dataset.price) : 0;
         const stock = opt?.dataset?.stock ? parseFloat(opt.dataset.stock) : 0;
         const unit = opt?.dataset?.unit || '';
         unitLabel.textContent = unit || '-';
 
-        if (productSel.value && costEl && !costEl.value) costEl.value = cost.toFixed(2);
-        if (isSale && priceEl && !priceEl.value) priceEl.value = price.toFixed(2);
-
         const qty = parseFloat(qtyEl.value) || 0;
-        const usedCost = parseFloat(costEl?.value) || 0;
-        const usedPrice = parseFloat(priceEl?.value) || 0;
 
         document.getElementById('currentStock').textContent = productSel.value ? `${numFmt(stock)} ${unit}` : '-';
         document.getElementById('qtyPreview').textContent = qty ? `${numFmt(qty)} ${unit}` : '-';
-        document.getElementById('totalPreview').textContent = fmt(isSale ? qty * usedPrice : qty * usedCost);
-        if (isSale) {
-            document.getElementById('cogsPreview').textContent = fmt(qty * usedCost);
-            document.getElementById('profitPreview').textContent = fmt(qty * (usedPrice - usedCost));
-        }
+
         const after = isOut ? stock - qty : stock + qty;
         const afterEl = document.getElementById('afterStock');
         afterEl.textContent = productSel.value ? `${numFmt(after)} ${unit}` : '-';
         afterEl.className = 'fw-semibold ' + (after < 0 ? 'text-danger' : '');
     }
 
-    productSel.addEventListener('change', () => {
-        if (costEl) costEl.value = '';
-        if (priceEl) priceEl.value = '';
-        recalc();
-    });
-    [qtyEl, costEl, priceEl].forEach(el => el && el.addEventListener('input', recalc));
+    productSel.addEventListener('change', recalc);
+    qtyEl.addEventListener('input', recalc);
     recalc();
 })();
 </script>

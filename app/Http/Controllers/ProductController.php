@@ -11,7 +11,7 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with(['inventoryAccount', 'category'])->orderBy('code');
+        $query = Product::with('category')->orderBy('code');
 
         if ($search = $request->string('q')->toString()) {
             $query->where(function ($q) use ($search) {
@@ -92,8 +92,6 @@ class ProductController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'category_id' => ['nullable', 'exists:categories,id'],
             'unit' => ['required', 'string', 'max:20'],
-            'cost_price' => ['required', 'numeric', 'min:0'],
-            'sale_price' => ['required', 'numeric', 'min:0'],
             'stock' => ['required', 'numeric', 'min:0'],
             'min_stock' => ['nullable', 'numeric', 'min:0'],
             'is_active' => ['nullable', 'boolean'],

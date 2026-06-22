@@ -28,10 +28,8 @@
 </form>
 
 <div class="row g-3 mb-3">
-    <div class="col-md-3"><div class="card p-3"><div class="text-muted small">Total Qty Terjual</div><div class="h5 mb-0">@qty($totalQty)</div></div></div>
-    <div class="col-md-3"><div class="card p-3"><div class="text-muted small">Total Omzet</div><div class="h5 mb-0 text-success">@rupiah($totalRevenue)</div></div></div>
-    <div class="col-md-3"><div class="card p-3"><div class="text-muted small">Total HPP</div><div class="h5 mb-0 text-muted">@rupiah($totalCogs)</div></div></div>
-    <div class="col-md-3"><div class="card p-3"><div class="text-muted small">Laba Kotor</div><div class="h5 mb-0 {{ $grossProfit >= 0 ? 'text-success' : 'text-danger' }}">@rupiah($grossProfit)</div></div></div>
+    <div class="col-md-6"><div class="card p-3"><div class="text-muted small">Total Transaksi</div><div class="h5 mb-0">{{ $totalTransactions }}</div></div></div>
+    <div class="col-md-6"><div class="card p-3"><div class="text-muted small">Total Qty Terjual</div><div class="h5 mb-0 text-primary">@qty($totalQty)</div></div></div>
 </div>
 
 <div class="card p-4">
@@ -48,10 +46,7 @@
             <th>No. Ref</th>
             <th>Barang</th>
             <th class="text-end">Qty</th>
-            <th class="text-end">Harga Jual</th>
-            <th class="text-end">Total Penjualan</th>
-            <th class="text-end">Total HPP</th>
-            <th class="text-end">Laba Kotor</th>
+            <th>Catatan</th>
         </tr>
         </thead>
         <tbody>
@@ -60,24 +55,18 @@
                 <td class="text-nowrap">{{ $m->date->isoFormat('DD MMM YY') }}</td>
                 <td><code>{{ $m->reference }}</code></td>
                 <td>{{ $m->product->name }}</td>
-                <td class="text-end">@qty($m->quantity) {{ $m->product->unit }}</td>
-                <td class="text-end">@rupiah($m->unit_price)</td>
-                <td class="text-end">@rupiah($m->total_price)</td>
-                <td class="text-end text-muted">@rupiah($m->total_cost)</td>
-                <td class="text-end {{ ($m->total_price - $m->total_cost) >= 0 ? 'text-success' : 'text-danger' }}">@rupiah($m->total_price - $m->total_cost)</td>
+                <td class="text-end fw-semibold">@qty($m->quantity) {{ $m->product->unit }}</td>
+                <td class="text-muted small">{{ $m->note }}</td>
             </tr>
         @empty
-            <tr><td colspan="8" class="text-center text-muted py-3">Tidak ada penjualan pada periode ini.</td></tr>
+            <tr><td colspan="5" class="text-center text-muted py-3">Tidak ada penjualan pada periode ini.</td></tr>
         @endforelse
         </tbody>
         <tfoot>
         <tr>
-            <th colspan="3" class="text-end">TOTAL</th>
+            <th colspan="3" class="text-end">TOTAL ({{ $totalTransactions }} transaksi)</th>
             <th class="text-end">@qty($totalQty)</th>
             <th></th>
-            <th class="text-end">@rupiah($totalRevenue)</th>
-            <th class="text-end">@rupiah($totalCogs)</th>
-            <th class="text-end {{ $grossProfit >= 0 ? 'text-success' : 'text-danger' }}">@rupiah($grossProfit)</th>
         </tr>
         </tfoot>
     </table>

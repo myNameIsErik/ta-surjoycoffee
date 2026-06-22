@@ -16,10 +16,7 @@
         <div class="col-md-3"><strong>Tanggal:</strong> {{ $movement->date->isoFormat('DD MMMM YYYY') }}</div>
         <div class="col-md-3"><strong>Tipe:</strong> {{ $movement->typeLabel() }}</div>
         <div class="col-md-3"><strong>Barang:</strong> {{ $movement->product->code }} — {{ $movement->product->name }}</div>
-        <div class="col-md-3"><strong>Qty:</strong> @qty($movement->quantity) {{ $movement->product->unit }}</div>
-        <div class="col-md-3"><strong>Harga Pokok:</strong> @rupiah($movement->unit_cost)</div>
-        <div class="col-md-3"><strong>Harga Jual:</strong> @rupiah($movement->unit_price)</div>
-        <div class="col-md-3"><strong>Total:</strong> <span class="text-brand">@rupiah($movement->type === 'sale' ? $movement->total_price : $movement->total_cost)</span></div>
+        <div class="col-md-6"><strong>Qty:</strong> <span class="text-brand fw-semibold">@qty($movement->quantity) {{ $movement->product->unit }}</span></div>
         @if ($movement->note)
         <div class="col-12"><strong>Catatan:</strong> {{ $movement->note }}</div>
         @endif

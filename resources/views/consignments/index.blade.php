@@ -61,7 +61,7 @@
                 <th>Penerima</th>
                 <th>Barang</th>
                 <th class="text-end">Qty</th>
-                <th class="text-end">Nilai</th>
+                <th>Catatan</th>
                 <th class="text-end">Aksi</th>
             </tr>
             </thead>
@@ -75,8 +75,8 @@
                     </td>
                     <td>{{ $m->consignee->name }}</td>
                     <td>{{ $m->product->name }}</td>
-                    <td class="text-end">@qty($m->quantity) {{ $m->product->unit }}</td>
-                    <td class="text-end fw-semibold">@rupiah($m->type === 'sold' ? $m->total_price : $m->total_cost)</td>
+                    <td class="text-end fw-semibold">@qty($m->quantity) {{ $m->product->unit }}</td>
+                    <td class="text-muted small">{{ \Illuminate\Support\Str::limit($m->note, 40) }}</td>
                     <td class="text-end">
                         <a href="{{ route('consignments.show', $m) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
                         <form action="{{ route('consignments.destroy', $m) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus transaksi ini? {{ $m->type === 'send' ? 'Stok gudang akan dikembalikan.' : '' }}')">

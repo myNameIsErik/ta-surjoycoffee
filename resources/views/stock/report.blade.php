@@ -7,6 +7,11 @@
     <button onclick="window.print()" class="btn btn-outline-secondary no-print"><i class="bi bi-printer me-1"></i>Cetak</button>
 </div>
 
+<div class="row g-3 mb-3">
+    <div class="col-md-6"><div class="card p-3"><div class="text-muted small">Jumlah Jenis Barang</div><div class="h5 mb-0">{{ $totalProducts }}</div></div></div>
+    <div class="col-md-6"><div class="card p-3"><div class="text-muted small">Barang Stok Rendah</div><div class="h5 mb-0 {{ $lowStockCount > 0 ? 'text-danger' : '' }}">{{ $lowStockCount }}</div></div></div>
+</div>
+
 <div class="card p-4">
     <div class="text-center mb-4">
         <h5 class="mb-1">{{ strtoupper(config('app.name')) }}</h5>
@@ -22,8 +27,6 @@
             <th>Kategori</th>
             <th class="text-end">Stok</th>
             <th class="text-end">Min. Stok</th>
-            <th class="text-end">Harga Beli Avg</th>
-            <th class="text-end">Nilai Persediaan</th>
             <th class="text-center">Status</th>
         </tr>
         </thead>
@@ -32,11 +35,9 @@
             <tr class="{{ $p->isLowStock() ? 'table-warning' : '' }}">
                 <td>{{ $p->code }}</td>
                 <td>{{ $p->name }}</td>
-                <td class="text-muted small">{{ $p->category }}</td>
-                <td class="text-end">@qty($p->stock) {{ $p->unit }}</td>
+                <td class="text-muted small">{{ $p->category?->name ?: '-' }}</td>
+                <td class="text-end fw-semibold">@qty($p->stock) {{ $p->unit }}</td>
                 <td class="text-end text-muted">@qty($p->min_stock)</td>
-                <td class="text-end">@rupiah($p->cost_price)</td>
-                <td class="text-end fw-semibold">@rupiah($p->stock_value)</td>
                 <td class="text-center">
                     @if (!$p->is_active)
                         <span class="badge bg-secondary">Nonaktif</span>
@@ -48,16 +49,9 @@
                 </td>
             </tr>
         @empty
-            <tr><td colspan="8" class="text-center text-muted py-3">Belum ada master barang.</td></tr>
+            <tr><td colspan="6" class="text-center text-muted py-3">Belum ada master barang.</td></tr>
         @endforelse
         </tbody>
-        <tfoot>
-        <tr>
-            <th colspan="6" class="text-end">TOTAL NILAI PERSEDIAAN</th>
-            <th class="text-end">@rupiah($totalValue)</th>
-            <th></th>
-        </tr>
-        </tfoot>
     </table>
 </div>
 @endsection

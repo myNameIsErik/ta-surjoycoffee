@@ -34,7 +34,6 @@ class DatabaseSeeder extends Seeder
         User::whereIn('email', ['admin@cafe.test', 'kasir@cafe.test'])->delete();
 
         $this->call([
-            AccountSeeder::class,
             CategorySeeder::class,
         ]);
     }

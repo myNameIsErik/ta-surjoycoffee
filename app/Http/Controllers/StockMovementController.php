@@ -13,7 +13,7 @@ class StockMovementController extends Controller
 {
     public function index(Request $request)
     {
-        $query = StockMovement::with(['product', 'journal'])->orderByDesc('date')->orderByDesc('id');
+        $query = StockMovement::with(['product'])->orderByDesc('date')->orderByDesc('id');
 
         if ($type = $request->string('type')->toString()) {
             $query->where('type', $type);
@@ -57,8 +57,6 @@ class StockMovementController extends Controller
             'date' => ['required', 'date'],
             'product_id' => ['required', 'exists:products,id'],
             'quantity' => ['required', 'numeric', 'min:0.0001'],
-            'unit_cost' => ['nullable', 'numeric', 'min:0'],
-            'unit_price' => ['nullable', 'numeric', 'min:0'],
             'note' => ['nullable', 'string', 'max:500'],
         ]);
 
@@ -70,13 +68,8 @@ class StockMovementController extends Controller
             ]);
         }
 
-        $unitCost = (float) ($data['unit_cost'] ?? $product->cost_price);
-        $unitPrice = (float) ($data['unit_price'] ?? $product->sale_price);
-
-        DB::transaction(function () use ($data, $product, $unitCost, $unitPrice) {
+        DB::transaction(function () use ($data, $product) {
             $qty = (float) $data['quantity'];
-            $totalCost = $unitCost * $qty;
-            $totalPrice = $unitPrice * $qty;
 
             $movement = StockMovement::create([
                 'reference' => StockMovement::generateReference($data['type']),
@@ -84,15 +77,11 @@ class StockMovementController extends Controller
                 'type' => $data['type'],
                 'product_id' => $product->id,
                 'quantity' => $qty,
-                'unit_cost' => $unitCost,
-                'unit_price' => $unitPrice,
-                'total_cost' => $totalCost,
-                'total_price' => $totalPrice,
                 'user_id' => auth()->id(),
                 'note' => $data['note'] ?? null,
             ]);
 
-            $this->updateStockAndCost($product, $movement);
+            $this->updateStock($product, $movement);
         });
 
         return redirect()->route('stock.index')->with('success', 'Transaksi stok berhasil dicatat.');
@@ -158,14 +147,12 @@ class StockMovementController extends Controller
 
     public function report(Request $request)
     {
-        $products = Product::with('category')->orderBy('code')->get()->map(function ($p) {
-            $p->stock_value = (float) $p->stock * (float) $p->cost_price;
-            return $p;
-        });
+        $products = Product::with('category')->orderBy('code')->get();
 
         return view('stock.report', [
             'products' => $products,
-            'totalValue' => $products->sum('stock_value'),
+            'totalProducts' => $products->count(),
+            'lowStockCount' => $products->filter(fn ($p) => $p->isLowStock())->count(),
         ]);
     }
 
@@ -186,21 +173,14 @@ class StockMovementController extends Controller
 
         $movements = $query->get();
 
-        $totalQty = $movements->sum('quantity');
-        $totalRevenue = $movements->sum('total_price');
-        $totalCogs = $movements->sum('total_cost');
-        $grossProfit = $totalRevenue - $totalCogs;
-
         return view('stock.sales-report', [
             'movements' => $movements,
             'products' => Product::orderBy('name')->get(),
             'filters' => compact('from', 'to', 'productId'),
             'from' => $from,
             'to' => $to,
-            'totalQty' => $totalQty,
-            'totalRevenue' => $totalRevenue,
-            'totalCogs' => $totalCogs,
-            'grossProfit' => $grossProfit,
+            'totalQty' => $movements->sum('quantity'),
+            'totalTransactions' => $movements->count(),
         ]);
     }
 
@@ -228,23 +208,15 @@ class StockMovementController extends Controller
             'from' => $from,
             'to' => $to,
             'totalQty' => $movements->sum('quantity'),
-            'totalCost' => $movements->sum('total_cost'),
+            'totalTransactions' => $movements->count(),
         ]);
     }
 
-    protected function updateStockAndCost(Product $product, StockMovement $movement): void
+    protected function updateStock(Product $product, StockMovement $movement): void
     {
         $qty = (float) $movement->quantity;
 
-        if ($movement->type === 'purchase') {
-            $newQty = (float) $product->stock + $qty;
-            if ($newQty > 0) {
-                $oldValue = (float) $product->stock * (float) $product->cost_price;
-                $newValue = $qty * (float) $movement->unit_cost;
-                $product->cost_price = ($oldValue + $newValue) / $newQty;
-            }
-            $product->stock = $newQty;
-        } elseif ($movement->type === 'adjustment_in') {
+        if (in_array($movement->type, ['purchase', 'adjustment_in'])) {
             $product->stock = (float) $product->stock + $qty;
         } elseif (in_array($movement->type, ['sale', 'adjustment_out'])) {
             $product->stock = (float) $product->stock - $qty;
@@ -252,5 +224,4 @@ class StockMovementController extends Controller
 
         $product->save();
     }
-
 }

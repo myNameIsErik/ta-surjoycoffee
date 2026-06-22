@@ -54,8 +54,7 @@
                 <th>Nama Barang</th>
                 <th>Kategori</th>
                 <th class="text-end">Stok</th>
-                <th class="text-end">Harga Beli</th>
-                <th class="text-end">Harga Jual</th>
+                <th class="text-end">Stok Min</th>
                 <th class="text-center">Status</th>
                 <th class="text-end">Aksi</th>
             </tr>
@@ -72,8 +71,7 @@
                             <span class="badge bg-danger ms-1" title="Di bawah minimum">!</span>
                         @endif
                     </td>
-                    <td class="text-end">@rupiah($p->cost_price)</td>
-                    <td class="text-end">@rupiah($p->sale_price)</td>
+                    <td class="text-end text-muted">@qty($p->min_stock)</td>
                     <td class="text-center">
                         @if ($p->is_active)
                             <span class="badge bg-success">Aktif</span>

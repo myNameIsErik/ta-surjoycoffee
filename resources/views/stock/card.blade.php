@@ -20,7 +20,7 @@
         <h5 class="mb-1">KARTU STOK</h5>
         <div>{{ $product->code }} — {{ $product->name }}</div>
         <div class="text-muted small">
-            Satuan: {{ $product->unit }} &middot; Harga Beli Rata-rata: @rupiah($product->cost_price) &middot; Harga Jual: @rupiah($product->sale_price)
+            Satuan: {{ $product->unit }} &middot; Kategori: {{ $product->category?->name ?: '-' }}
         </div>
     </div>
 
@@ -33,7 +33,6 @@
             <th class="text-end">Masuk</th>
             <th class="text-end">Keluar</th>
             <th class="text-end">Saldo Stok</th>
-            <th class="text-end">Nilai (Rp)</th>
             <th>Catatan</th>
         </tr>
         </thead>
@@ -41,7 +40,7 @@
         <tr class="table-light">
             <td colspan="5"><em>Saldo Awal</em></td>
             <td class="text-end fw-semibold">@qty($opening) {{ $product->unit }}</td>
-            <td colspan="2"></td>
+            <td></td>
         </tr>
         @forelse ($movements as $m)
             <tr>
@@ -51,18 +50,17 @@
                 <td class="text-end text-success">@if($m->isIncoming())@qty($m->quantity)@endif</td>
                 <td class="text-end text-danger">@if(!$m->isIncoming())@qty($m->quantity)@endif</td>
                 <td class="text-end">@qty($m->running_stock)</td>
-                <td class="text-end">@rupiah(($m->type === 'sale' ? $m->total_price : $m->total_cost))</td>
                 <td class="text-muted small">{{ $m->note }}</td>
             </tr>
         @empty
-            <tr><td colspan="8" class="text-center text-muted py-3">Tidak ada transaksi.</td></tr>
+            <tr><td colspan="7" class="text-center text-muted py-3">Tidak ada transaksi.</td></tr>
         @endforelse
         </tbody>
         <tfoot>
         <tr>
             <th colspan="5" class="text-end">Saldo Akhir</th>
             <th class="text-end">@qty($ending) {{ $product->unit }}</th>
-            <th colspan="2"></th>
+            <th></th>
         </tr>
         </tfoot>
     </table>
