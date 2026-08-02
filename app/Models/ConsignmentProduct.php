@@ -3,15 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Product extends Model
+class ConsignmentProduct extends Model
 {
     protected $fillable = [
         'code',
         'name',
-        'category_id',
         'unit',
         'sale_price',
         'stock',
@@ -26,14 +24,9 @@ class Product extends Model
         'is_active' => 'boolean',
     ];
 
-    public function category(): BelongsTo
+    public function consignments(): HasMany
     {
-        return $this->belongsTo(Category::class);
-    }
-
-    public function movements(): HasMany
-    {
-        return $this->hasMany(StockMovement::class)->orderBy('date')->orderBy('id');
+        return $this->hasMany(Consignment::class);
     }
 
     public function isLowStock(): bool

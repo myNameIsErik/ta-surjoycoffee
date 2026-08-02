@@ -26,11 +26,11 @@ class Consignee extends Model
     public function outstandingByProduct()
     {
         $rows = $this->consignments()
-            ->with('product')
+            ->with('consignmentProduct')
             ->get()
-            ->groupBy('product_id')
+            ->groupBy('consignment_product_id')
             ->map(function ($items) {
-                $product = $items->first()->product;
+                $product = $items->first()->consignmentProduct;
                 $sent = $items->where('type', 'send')->sum('quantity');
                 $sold = $items->where('type', 'sold')->sum('quantity');
 

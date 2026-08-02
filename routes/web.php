@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ConsigneeController;
 use App\Http\Controllers\ConsignmentController;
+use App\Http\Controllers\ConsignmentProductController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\StockMovementController;
@@ -51,6 +52,16 @@ Route::middleware('auth')->group(function () {
 
     // Konsinyasi
     Route::resource('consignees', ConsigneeController::class)->middleware('admin');
+
+    // Master barang konsinyasi: read-only untuk semua; write khusus admin
+    Route::get('consignment-products', [ConsignmentProductController::class, 'index'])->name('consignment-products.index');
+    Route::middleware('admin')->group(function () {
+        Route::get('consignment-products/create',                     [ConsignmentProductController::class, 'create'])->name('consignment-products.create');
+        Route::post('consignment-products',                           [ConsignmentProductController::class, 'store'])->name('consignment-products.store');
+        Route::get('consignment-products/{consignment_product}/edit', [ConsignmentProductController::class, 'edit'])->name('consignment-products.edit');
+        Route::put('consignment-products/{consignment_product}',      [ConsignmentProductController::class, 'update'])->name('consignment-products.update');
+        Route::delete('consignment-products/{consignment_product}',   [ConsignmentProductController::class, 'destroy'])->name('consignment-products.destroy');
+    });
 
     Route::prefix('consignments')->name('consignments.')->group(function () {
         Route::get('/',                          [ConsignmentController::class, 'index'])->name('index');

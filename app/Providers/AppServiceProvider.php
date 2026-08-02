@@ -20,5 +20,9 @@ class AppServiceProvider extends ServiceProvider
         Blade::directive('qty', function ($expression) {
             return "<?php \$__v = (float)($expression); echo rtrim(rtrim(number_format(\$__v, 2, ',', '.'), '0'), ','); ?>";
         });
+
+        Blade::directive('rupiah', function ($expression) {
+            return "<?php echo 'Rp ' . number_format((float)($expression), 0, ',', '.'); ?>";
+        });
     }
 }

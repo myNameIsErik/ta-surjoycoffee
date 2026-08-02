@@ -14,10 +14,15 @@
     <div class="row g-3 mb-3">
         <div class="col-md-3"><strong>No. Ref:</strong> <code>{{ $movement->reference }}</code></div>
         <div class="col-md-3"><strong>Tanggal:</strong> {{ $movement->date->isoFormat('DD MMMM YYYY') }}</div>
-        <div class="col-md-3"><strong>Tipe:</strong> <span class="badge {{ $movement->type === 'send' ? 'bg-success' : 'bg-primary' }}">{{ $movement->typeLabel() }}</span></div>
-        <div class="col-md-3"><strong>Penerima:</strong> {{ $movement->consignee->name }}</div>
-        <div class="col-md-6"><strong>Barang:</strong> {{ $movement->product->code }} — {{ $movement->product->name }}</div>
-        <div class="col-md-6"><strong>Qty:</strong> <span class="text-brand fw-semibold">@qty($movement->quantity) {{ $movement->product->unit }}</span></div>
+        @php $badges = ['stock_in' => 'bg-success', 'send' => 'bg-warning text-dark', 'sold' => 'bg-primary']; @endphp
+        <div class="col-md-3"><strong>Tipe:</strong> <span class="badge {{ $badges[$movement->type] ?? 'bg-secondary' }}">{{ $movement->typeLabel() }}</span></div>
+        <div class="col-md-3"><strong>Penerima:</strong> {{ $movement->consignee?->name ?? '-' }}</div>
+        <div class="col-md-6"><strong>Barang:</strong> {{ $movement->consignmentProduct?->code }} — {{ $movement->consignmentProduct?->name }}</div>
+        <div class="col-md-6"><strong>Qty:</strong> <span class="text-brand fw-semibold">@qty($movement->quantity) {{ $movement->consignmentProduct?->unit }}</span></div>
+        @if ($movement->type === 'sold')
+        <div class="col-md-6"><strong>Harga Jual:</strong> @rupiah($movement->consignmentProduct?->sale_price ?? 0)</div>
+        <div class="col-md-6"><strong>Omzet:</strong> <span class="text-primary fw-semibold">@rupiah($movement->omzet())</span></div>
+        @endif
         @if ($movement->note)
         <div class="col-12"><strong>Catatan:</strong> {{ $movement->note }}</div>
         @endif

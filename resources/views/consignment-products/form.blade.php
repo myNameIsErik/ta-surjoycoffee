@@ -1,23 +1,23 @@
 @extends('layouts.app')
-@section('title', $product->exists ? 'Edit Barang' : 'Tambah Barang')
+@section('title', $product->exists ? 'Edit Barang Konsinyasi' : 'Tambah Barang Konsinyasi')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0">
         <i class="bi bi-{{ $product->exists ? 'pencil' : 'plus-lg' }} me-1"></i>
-        {{ $product->exists ? 'Edit Barang' : 'Tambah Barang' }}
+        {{ $product->exists ? 'Edit Barang Konsinyasi' : 'Tambah Barang Konsinyasi' }}
     </h4>
-    <a href="{{ route('products.index') }}" class="btn btn-link"><i class="bi bi-arrow-left me-1"></i>Kembali</a>
+    <a href="{{ route('consignment-products.index') }}" class="btn btn-link"><i class="bi bi-arrow-left me-1"></i>Kembali</a>
 </div>
 
-<form method="POST" action="{{ $product->exists ? route('products.update', $product) : route('products.store') }}">
+<form method="POST" action="{{ $product->exists ? route('consignment-products.update', $product) : route('consignment-products.store') }}">
     @csrf
     @if ($product->exists) @method('PUT') @endif
 
     <div class="row g-3">
         <div class="col-lg-8 mx-auto">
             <div class="card p-3">
-                <h6 class="mb-3">Informasi Barang</h6>
+                <h6 class="mb-3">Informasi Barang Konsinyasi</h6>
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">Kode <span class="text-danger">*</span></label>
@@ -28,18 +28,8 @@
                         <input type="text" name="name" value="{{ old('name', $product->name) }}" class="form-control" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Kategori</label>
-                        <select name="category_id" class="form-select">
-                            <option value="">-- Tanpa Kategori --</option>
-                            @foreach ($categories as $cat)
-                                <option value="{{ $cat->id }}" @selected(old('category_id', $product->category_id) == $cat->id)>{{ $cat->name }}</option>
-                            @endforeach
-                        </select>
-                        <div class="form-text">Kelola kategori di menu Kategori Barang.</div>
-                    </div>
-                    <div class="col-md-6">
                         <label class="form-label">Satuan <span class="text-danger">*</span></label>
-                        <input type="text" name="unit" value="{{ old('unit', $product->unit) }}" class="form-control" placeholder="pcs, dus, karung, kg, liter" required>
+                        <input type="text" name="unit" value="{{ old('unit', $product->unit) }}" class="form-control" placeholder="pcs, dus, kg, liter" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Harga Jual</label>
@@ -47,13 +37,13 @@
                             <span class="input-group-text">Rp</span>
                             <input type="number" step="1" min="0" name="sale_price" value="{{ old('sale_price', (int) $product->sale_price) }}" class="form-control" placeholder="0">
                         </div>
-                        <div class="form-text">Dipakai untuk menghitung omzet penjualan.</div>
+                        <div class="form-text">Dipakai untuk menghitung omzet konsinyasi (saat lapor terjual).</div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Stok {{ $product->exists ? 'Saat Ini' : 'Awal' }}</label>
+                        <label class="form-label">Stok Gudang {{ $product->exists ? 'Saat Ini' : 'Awal' }}</label>
                         <input type="number" step="1" min="0" name="stock" value="{{ old('stock', (int) $product->stock) }}" class="form-control" {{ $product->exists ? 'readonly' : '' }}>
                         @if ($product->exists)
-                            <div class="form-text">Stok hanya bisa diubah lewat transaksi stok masuk / keluar.</div>
+                            <div class="form-text">Stok hanya berubah lewat Stok Masuk / Kirim Titipan.</div>
                         @endif
                     </div>
                     <div class="col-md-6">
@@ -71,12 +61,11 @@
                 </div>
             </div>
         </div>
-
     </div>
 
     <div class="mt-3">
         <button class="btn btn-brand"><i class="bi bi-save me-1"></i>Simpan</button>
-        <a href="{{ route('products.index') }}" class="btn btn-link">Batal</a>
+        <a href="{{ route('consignment-products.index') }}" class="btn btn-link">Batal</a>
     </div>
 </form>
 @endsection

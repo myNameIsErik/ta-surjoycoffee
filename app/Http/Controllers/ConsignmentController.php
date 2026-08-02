@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Consignee;
 use App\Models\Consignment;
-use App\Models\Product;
+use App\Models\ConsignmentProduct;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -14,7 +14,7 @@ class ConsignmentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Consignment::with(['consignee', 'product'])
+        $query = Consignment::with(['consignee', 'consignmentProduct'])
             ->orderByDesc('date')->orderByDesc('id');
 
         if ($type = $request->string('type')->toString()) {
@@ -23,8 +23,8 @@ class ConsignmentController extends Controller
         if ($consigneeId = $request->integer('consignee_id')) {
             $query->where('consignee_id', $consigneeId);
         }
-        if ($productId = $request->integer('product_id')) {
-            $query->where('product_id', $productId);
+        if ($productId = $request->integer('consignment_product_id')) {
+            $query->where('consignment_product_id', $productId);
         }
         if ($from = $request->string('from')->toString()) {
             $query->where('date', '>=', $from);
@@ -38,9 +38,9 @@ class ConsignmentController extends Controller
         return view('consignments.index', [
             'movements' => $movements,
             'consignees' => Consignee::orderBy('name')->get(),
-            'products' => Product::orderBy('name')->get(),
+            'products' => ConsignmentProduct::orderBy('name')->get(),
             'types' => Consignment::TYPES,
-            'filters' => $request->only('type', 'consignee_id', 'product_id', 'from', 'to'),
+            'filters' => $request->only('type', 'consignee_id', 'consignment_product_id', 'from', 'to'),
         ]);
     }
 
@@ -53,32 +53,36 @@ class ConsignmentController extends Controller
             'type' => $type,
             'types' => Consignment::TYPES,
             'consignees' => Consignee::where('is_active', true)->orderBy('name')->get(),
-            'products' => Product::where('is_active', true)->orderBy('name')->get(),
+            'products' => ConsignmentProduct::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 
     public function store(Request $request)
     {
+        $type = $request->string('type')->toString();
+
         $data = $request->validate([
             'type' => ['required', Rule::in(array_keys(Consignment::TYPES))],
             'date' => ['required', 'date'],
-            'consignee_id' => ['required', 'exists:consignees,id'],
-            'product_id' => ['required', 'exists:products,id'],
+            // Penerima wajib untuk kirim/terjual; tidak dipakai untuk stok masuk.
+            'consignee_id' => [Rule::requiredIf(in_array($type, ['send', 'sold'])), 'nullable', 'exists:consignees,id'],
+            'consignment_product_id' => ['required', 'exists:consignment_products,id'],
             'quantity' => ['required', 'numeric', 'min:0.0001'],
             'note' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $product = Product::findOrFail($data['product_id']);
+        $product = ConsignmentProduct::findOrFail($data['consignment_product_id']);
         $qty = (float) $data['quantity'];
+        $consigneeId = in_array($data['type'], ['send', 'sold']) ? $data['consignee_id'] : null;
 
         if ($data['type'] === 'send') {
             if ($qty > (float) $product->stock) {
                 throw ValidationException::withMessages([
-                    'quantity' => "Stok gudang tidak cukup. Saat ini: {$product->stock} {$product->unit}.",
+                    'quantity' => "Stok gudang konsinyasi tidak cukup. Saat ini: {$product->stock} {$product->unit}.",
                 ]);
             }
-        } else { // sold
-            $outstanding = Consignment::outstanding($data['consignee_id'], $data['product_id']);
+        } elseif ($data['type'] === 'sold') {
+            $outstanding = Consignment::outstanding((int) $consigneeId, (int) $product->id);
             if ($qty > $outstanding) {
                 throw ValidationException::withMessages([
                     'quantity' => "Sisa titipan di penerima ini hanya {$outstanding} {$product->unit}.",
@@ -86,42 +90,45 @@ class ConsignmentController extends Controller
             }
         }
 
-        DB::transaction(function () use ($data, $product, $qty) {
+        DB::transaction(function () use ($data, $product, $qty, $consigneeId) {
             Consignment::create([
                 'reference' => Consignment::generateReference($data['type']),
                 'date' => $data['date'],
                 'type' => $data['type'],
-                'consignee_id' => $data['consignee_id'],
-                'product_id' => $product->id,
+                'consignee_id' => $consigneeId,
+                'consignment_product_id' => $product->id,
                 'quantity' => $qty,
                 'user_id' => auth()->id(),
                 'note' => $data['note'] ?? null,
             ]);
 
-            // Saat KIRIM titipan, stok gudang berkurang. Saat LAPOR TERJUAL, stok gudang tetap (sudah keluar saat kirim).
-            if ($data['type'] === 'send') {
+            // Stok gudang konsinyasi: naik saat STOK MASUK, turun saat KIRIM titipan.
+            // Saat LAPOR TERJUAL stok gudang tetap (sudah keluar saat kirim).
+            if ($data['type'] === 'stock_in') {
+                $product->increment('stock', $qty);
+            } elseif ($data['type'] === 'send') {
                 $product->decrement('stock', $qty);
             }
         });
 
-        $label = $data['type'] === 'send' ? 'Kirim titipan' : 'Lapor terjual';
+        $label = Consignment::TYPES[$data['type']];
 
         return redirect()->route('consignments.index')->with('success', "{$label} berhasil dicatat.");
     }
 
     public function show(Consignment $consignment)
     {
-        $consignment->load(['consignee', 'product']);
+        $consignment->load(['consignee', 'consignmentProduct']);
 
         return view('consignments.show', ['movement' => $consignment]);
     }
 
-    /** AJAX: kembalikan outstanding qty per (consignee, product) untuk validasi UI. */
+    /** AJAX: kembalikan outstanding qty per (consignee, consignment_product) untuk validasi UI. */
     public function outstanding(Request $request)
     {
         $consigneeId = $request->integer('consignee_id');
-        $productId = $request->integer('product_id');
-        if (!$consigneeId || !$productId) {
+        $productId = $request->integer('consignment_product_id');
+        if (! $consigneeId || ! $productId) {
             return response()->json(['outstanding' => 0]);
         }
 
@@ -131,24 +138,30 @@ class ConsignmentController extends Controller
     public function destroy(Consignment $consignment)
     {
         DB::transaction(function () use ($consignment) {
-            // Rollback stok kalau type=send
-            if ($consignment->type === 'send') {
-                $consignment->product->increment('stock', (float) $consignment->quantity);
+            $product = $consignment->consignmentProduct;
+            $qty = (float) $consignment->quantity;
+
+            // Rollback stok gudang: stok masuk -> kurangi lagi, kirim -> kembalikan.
+            if ($consignment->type === 'stock_in') {
+                $product?->decrement('stock', $qty);
+            } elseif ($consignment->type === 'send') {
+                $product?->increment('stock', $qty);
             }
+
             $consignment->delete();
         });
 
-        return back()->with('success', 'Transaksi konsinyasi dihapus & stok dikembalikan (untuk pengiriman).');
+        return back()->with('success', 'Transaksi konsinyasi dihapus & stok disesuaikan kembali.');
     }
 
     /**
-     * Laporan Posisi Konsinyasi — per penerima, list barang outstanding.
+     * Laporan Posisi Konsinyasi — per penerima, list barang outstanding + nilainya.
      */
     public function position(Request $request)
     {
         $consigneeId = $request->integer('consignee_id');
 
-        $query = Consignee::with(['consignments.product'])->where('is_active', true)->orderBy('name');
+        $query = Consignee::with(['consignments.consignmentProduct'])->where('is_active', true)->orderBy('name');
         if ($consigneeId) {
             $query->where('id', $consigneeId);
         }
@@ -156,11 +169,13 @@ class ConsignmentController extends Controller
             $rows = $c->outstandingByProduct();
             $c->outstanding_rows = $rows;
             $c->outstanding_total_qty = $rows->sum(fn ($r) => $r['outstanding']);
+            $c->outstanding_total_value = $rows->sum(fn ($r) => $r['outstanding'] * (float) ($r['product']->sale_price ?? 0));
             return $c;
         })->filter(fn ($c) => $c->outstanding_rows->count() > 0)->values();
 
         $totalConsignees = $consignees->count();
         $totalLines = $consignees->sum(fn ($c) => $c->outstanding_rows->count());
+        $totalValue = $consignees->sum(fn ($c) => $c->outstanding_total_value);
 
         return view('consignments.position', [
             'consignees' => $consignees,
@@ -168,6 +183,7 @@ class ConsignmentController extends Controller
             'filters' => ['consignee_id' => $consigneeId],
             'totalConsignees' => $totalConsignees,
             'totalLines' => $totalLines,
+            'totalValue' => $totalValue,
         ]);
     }
 }

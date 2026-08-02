@@ -181,6 +181,7 @@ class StockMovementController extends Controller
             'to' => $to,
             'totalQty' => $movements->sum('quantity'),
             'totalTransactions' => $movements->count(),
+            'totalOmzet' => $movements->sum(fn ($m) => (float) $m->quantity * (float) ($m->product->sale_price ?? 0)),
         ]);
     }
 

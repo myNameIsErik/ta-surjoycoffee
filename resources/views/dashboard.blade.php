@@ -7,6 +7,21 @@
     <span class="text-muted small">Periode: {{ now()->isoFormat('MMMM Y') }}</span>
 </div>
 
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <div class="card stat-card p-3">
+            <div class="text-muted small">Omzet Penjualan Bulan Ini</div>
+            <div class="h4 mb-0 text-primary">@rupiah($salesOmzetMonth)</div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card stat-card p-3">
+            <div class="text-muted small">Omzet Konsinyasi Bulan Ini</div>
+            <div class="h4 mb-0 text-info">@rupiah($consignmentOmzetMonth)</div>
+        </div>
+    </div>
+</div>
+
 <div class="row g-3 mb-4">
     <div class="col-md-3">
         <div class="card stat-card p-3">

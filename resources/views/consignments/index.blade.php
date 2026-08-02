@@ -5,7 +5,8 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0"><i class="bi bi-truck me-1"></i> Transaksi Konsinyasi</h4>
     <div class="btn-group">
-        <a href="{{ route('consignments.create', ['type' => 'send']) }}" class="btn btn-success"><i class="bi bi-box-arrow-right me-1"></i>Kirim Titipan</a>
+        <a href="{{ route('consignments.create', ['type' => 'stock_in']) }}" class="btn btn-success"><i class="bi bi-box-arrow-in-down me-1"></i>Stok Masuk</a>
+        <a href="{{ route('consignments.create', ['type' => 'send']) }}" class="btn btn-warning"><i class="bi bi-box-arrow-right me-1"></i>Kirim Titipan</a>
         <a href="{{ route('consignments.create', ['type' => 'sold']) }}" class="btn btn-primary"><i class="bi bi-cash-coin me-1"></i>Lapor Terjual</a>
     </div>
 </div>
@@ -32,10 +33,10 @@
         </div>
         <div class="col-md-3">
             <label class="form-label small mb-0">Barang</label>
-            <select name="product_id" class="form-select form-select-sm">
+            <select name="consignment_product_id" class="form-select form-select-sm">
                 <option value="">Semua</option>
                 @foreach ($products as $p)
-                    <option value="{{ $p->id }}" @selected((string)($filters['product_id'] ?? '') === (string)$p->id)>{{ $p->code }} — {{ $p->name }}</option>
+                    <option value="{{ $p->id }}" @selected((string)($filters['consignment_product_id'] ?? '') === (string)$p->id)>{{ $p->code }} — {{ $p->name }}</option>
                 @endforeach
             </select>
         </div>
@@ -61,6 +62,7 @@
                 <th>Penerima</th>
                 <th>Barang</th>
                 <th class="text-end">Qty</th>
+                <th class="text-end">Omzet</th>
                 <th>Catatan</th>
                 <th class="text-end">Aksi</th>
             </tr>
@@ -71,22 +73,24 @@
                     <td class="text-nowrap">{{ $m->date->isoFormat('DD MMM YY') }}</td>
                     <td><code>{{ $m->reference }}</code></td>
                     <td>
-                        <span class="badge {{ $m->type === 'send' ? 'bg-success' : 'bg-primary' }}">{{ $m->typeLabel() }}</span>
+                        @php $badges = ['stock_in' => 'bg-success', 'send' => 'bg-warning text-dark', 'sold' => 'bg-primary']; @endphp
+                        <span class="badge {{ $badges[$m->type] ?? 'bg-secondary' }}">{{ $m->typeLabel() }}</span>
                     </td>
-                    <td>{{ $m->consignee->name }}</td>
-                    <td>{{ $m->product->name }}</td>
-                    <td class="text-end fw-semibold">@qty($m->quantity) {{ $m->product->unit }}</td>
+                    <td>{{ $m->consignee?->name ?? '-' }}</td>
+                    <td>{{ $m->consignmentProduct?->name }}</td>
+                    <td class="text-end fw-semibold">@qty($m->quantity) {{ $m->consignmentProduct?->unit }}</td>
+                    <td class="text-end">@if($m->type === 'sold')@rupiah($m->omzet())@else<span class="text-muted">-</span>@endif</td>
                     <td class="text-muted small">{{ \Illuminate\Support\Str::limit($m->note, 40) }}</td>
                     <td class="text-end">
                         <a href="{{ route('consignments.show', $m) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
-                        <form action="{{ route('consignments.destroy', $m) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus transaksi ini? {{ $m->type === 'send' ? 'Stok gudang akan dikembalikan.' : '' }}')">
+                        <form action="{{ route('consignments.destroy', $m) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus transaksi ini? {{ in_array($m->type, ['stock_in','send']) ? 'Stok gudang akan disesuaikan.' : '' }}')">
                             @csrf @method('DELETE')
                             <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                         </form>
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="8" class="text-center text-muted py-4">Belum ada transaksi konsinyasi.</td></tr>
+                <tr><td colspan="9" class="text-center text-muted py-4">Belum ada transaksi konsinyasi.</td></tr>
             @endforelse
             </tbody>
         </table>

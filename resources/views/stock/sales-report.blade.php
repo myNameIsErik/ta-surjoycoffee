@@ -28,8 +28,9 @@
 </form>
 
 <div class="row g-3 mb-3">
-    <div class="col-md-6"><div class="card p-3"><div class="text-muted small">Total Transaksi</div><div class="h5 mb-0">{{ $totalTransactions }}</div></div></div>
-    <div class="col-md-6"><div class="card p-3"><div class="text-muted small">Total Qty Terjual</div><div class="h5 mb-0 text-primary">@qty($totalQty)</div></div></div>
+    <div class="col-md-4"><div class="card p-3"><div class="text-muted small">Total Transaksi</div><div class="h5 mb-0">{{ $totalTransactions }}</div></div></div>
+    <div class="col-md-4"><div class="card p-3"><div class="text-muted small">Total Qty Terjual</div><div class="h5 mb-0 text-primary">@qty($totalQty)</div></div></div>
+    <div class="col-md-4"><div class="card p-3"><div class="text-muted small">Total Omzet</div><div class="h5 mb-0 text-success">@rupiah($totalOmzet)</div></div></div>
 </div>
 
 <div class="card p-4">
@@ -46,6 +47,8 @@
             <th>No. Ref</th>
             <th>Barang</th>
             <th class="text-end">Qty</th>
+            <th class="text-end">Harga</th>
+            <th class="text-end">Omzet</th>
             <th>Catatan</th>
         </tr>
         </thead>
@@ -56,16 +59,20 @@
                 <td><code>{{ $m->reference }}</code></td>
                 <td>{{ $m->product->name }}</td>
                 <td class="text-end fw-semibold">@qty($m->quantity) {{ $m->product->unit }}</td>
+                <td class="text-end">@rupiah($m->product->sale_price)</td>
+                <td class="text-end">@rupiah((float) $m->quantity * (float) $m->product->sale_price)</td>
                 <td class="text-muted small">{{ $m->note }}</td>
             </tr>
         @empty
-            <tr><td colspan="5" class="text-center text-muted py-3">Tidak ada penjualan pada periode ini.</td></tr>
+            <tr><td colspan="7" class="text-center text-muted py-3">Tidak ada penjualan pada periode ini.</td></tr>
         @endforelse
         </tbody>
         <tfoot>
         <tr>
             <th colspan="3" class="text-end">TOTAL ({{ $totalTransactions }} transaksi)</th>
             <th class="text-end">@qty($totalQty)</th>
+            <th></th>
+            <th class="text-end">@rupiah($totalOmzet)</th>
             <th></th>
         </tr>
         </tfoot>

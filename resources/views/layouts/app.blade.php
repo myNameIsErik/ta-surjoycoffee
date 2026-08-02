@@ -56,14 +56,16 @@
                     </li>
 
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {{ request()->routeIs('consignees.*') || request()->routeIs('consignments.*') ? 'active' : '' }}" data-bs-toggle="dropdown" href="#"><i class="bi bi-truck me-1"></i>Konsinyasi</a>
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('consignees.*') || request()->routeIs('consignments.*') || request()->routeIs('consignment-products.*') ? 'active' : '' }}" data-bs-toggle="dropdown" href="#"><i class="bi bi-truck me-1"></i>Konsinyasi</a>
                         <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ route('consignment-products.index') }}"><i class="bi bi-box me-1"></i>Master Barang Konsinyasi</a></li>
                             @if (auth()->user()->isAdmin())
                                 <li><a class="dropdown-item" href="{{ route('consignees.index') }}"><i class="bi bi-shop-window me-1"></i>Penerima Konsinyasi</a></li>
                             @endif
                             <li><a class="dropdown-item" href="{{ route('consignments.index') }}"><i class="bi bi-list-ul me-1"></i>Transaksi Konsinyasi</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ route('consignments.create', ['type' => 'send']) }}"><i class="bi bi-box-arrow-right me-1 text-success"></i>Kirim Titipan</a></li>
+                            <li><a class="dropdown-item" href="{{ route('consignments.create', ['type' => 'stock_in']) }}"><i class="bi bi-box-arrow-in-down me-1 text-success"></i>Stok Masuk (Konsinyasi)</a></li>
+                            <li><a class="dropdown-item" href="{{ route('consignments.create', ['type' => 'send']) }}"><i class="bi bi-box-arrow-right me-1 text-warning"></i>Kirim Titipan</a></li>
                             <li><a class="dropdown-item" href="{{ route('consignments.create', ['type' => 'sold']) }}"><i class="bi bi-cash-coin me-1 text-primary"></i>Lapor Terjual</a></li>
                         </ul>
                     </li>
